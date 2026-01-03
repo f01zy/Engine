@@ -59,7 +59,7 @@ float vertices[] = {
 
 const char *TITLE = "Sandbox";
 const int WIDTH = 800, HEIGHT = 600;
-std::string PROJECT_PATH = "/home/aminov/Documents/Programming/OpenGL/Sandbox";
+std::string PROJECT_PATH = "/home/aminov/Documents/Programming/OpenGL/Engine";
 
 bool firstMouse = true;
 float deltaTime = 0.0f;
@@ -67,7 +67,7 @@ float lastFrame = 0.0f;
 float lastX = WIDTH / 2.0f;
 float lastY = HEIGHT / 2.0f;
 
-glm::vec3 lampPosition(1.2f, 1.5f, 2.0f);
+glm::vec3 lightPosition(2.0f, 2.0f, 2.0f);
 glm::vec3 position = glm::vec3(0.0f, 0.0f, 3.0f);
 glm::vec3 direction = glm::vec3(0.0f, 0.0f, -1.0f);
 Camera camera(position, direction);
@@ -128,7 +128,17 @@ int main() {
   glViewport(0, 0, WIDTH, HEIGHT);
 
   Shader shader(PROJECT_PATH + "/src/shaders/vertex.glsl", PROJECT_PATH + "/src/shaders/fragment.glsl");
-  Shader lampShader(PROJECT_PATH + "/src/shaders/lamp.vertex.glsl", PROJECT_PATH + "/src/shaders/lamp.fragment.glsl");
+  Shader lightShader(PROJECT_PATH + "/src/shaders/light.vertex.glsl", PROJECT_PATH + "/src/shaders/light.fragment.glsl");
+
+  shader.use();
+  shader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
+  shader.setVec3("light.ambient", 0.2f, 0.2f, 0.2f);
+  shader.setVec3("light.diffuse", 0.5f, 0.5f, 0.5f);
+  shader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+  shader.setVec3("material.ambient", 1.0f, 0.5f, 0.31f);
+  shader.setVec3("material.diffuse", 1.0f, 0.5f, 0.31f);
+  shader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
+  shader.setFloat("material.shininess", 32.0f);
 
   unsigned VAO, VBO;
   glGenVertexArrays(1, &VAO);
@@ -143,34 +153,38 @@ int main() {
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindVertexArray(0);
 
-  unsigned lampVAO;
-  glGenVertexArrays(1, &lampVAO);
-  glBindVertexArray(lampVAO);
+  unsigned lightVAO;
+  glGenVertexArrays(1, &lightVAO);
+  glBindVertexArray(lightVAO);
   glBindBuffer(GL_VERTEX_ARRAY, VBO);
   glVertexAttribPointer(0, 3, GL_FLOAT, false, 6 * sizeof(float), reinterpret_cast<void *>(0 * sizeof(float)));
   glEnableVertexAttribArray(0);
   glBindBuffer(GL_VERTEX_ARRAY, 0);
   glBindVertexArray(0);
 
-  shader.use();
-  shader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
-  shader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
-  shader.setVec3("lightPosition", lampPosition);
-
   glEnable(GL_DEPTH_TEST);
   glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
   glfwSetCursorPosCallback(window, mouseCallback);
   glfwSetScrollCallback(window, scrollCallback);
 
+  float angle = 0.0f;
+  float radius = 2.0f;
+  float speed = 1.0f;
+
   while (!glfwWindowShouldClose(window)) {
     glfwPollEvents();
     processInput(window);
-    glClearColor(0.22f, 0.22f, 0.22f, 1.0f);
+    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     float currentFrame = glfwGetTime();
     deltaTime = currentFrame - lastFrame;
     lastFrame = currentFrame;
+
+    angle += speed * deltaTime;
+    float x = radius * cos(angle);
+    float z = radius * sin(angle);
+    lightPosition = glm::vec3(x, lightPosition.y, z);
 
     shader.use();
     glm::mat4 model = glm::mat4(1.0f);
@@ -180,18 +194,19 @@ int main() {
     shader.setMat4("model", model);
     shader.setMat4("projection", projection);
     shader.setVec3("viewPosition", camera.getPosition());
+    shader.setVec3("light.position", lightPosition);
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLES, 0, 36);
     glBindVertexArray(0);
 
-    lampShader.use();
+    lightShader.use();
     model = glm::mat4(1.0f);
-    model = glm::translate(model, lampPosition);
+    model = glm::translate(model, lightPosition);
     model = glm::scale(model, glm::vec3(0.2f));
-    lampShader.setMat4("view", view);
-    lampShader.setMat4("model", model);
-    lampShader.setMat4("projection", projection);
-    glBindVertexArray(lampVAO);
+    lightShader.setMat4("view", view);
+    lightShader.setMat4("model", model);
+    lightShader.setMat4("projection", projection);
+    glBindVertexArray(lightVAO);
     glDrawArrays(GL_TRIANGLES, 0, 36);
     glBindVertexArray(0);
 
