@@ -12,6 +12,7 @@ public:
   void use();
   unsigned getShaderProgram();
 
+  void setInt(const std::string &name, int x);
   void setFloat(const std::string &name, float x);
   void setVec3(const std::string &name, float x, float y, float z);
   void setVec3(const std::string &name, glm::vec3 vector);

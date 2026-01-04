@@ -1,9 +1,8 @@
 #version 330 core
 
 struct Material {
-  vec3 ambient;
-  vec3 diffuse;
-  vec3 specular;
+  sampler2D diffuse;
+  sampler2D specular;
   float shininess;
 };
 
@@ -15,9 +14,9 @@ struct Light {
 };
 
 out vec4 color;
-
 in vec3 fragmentPosition;
 in vec3 vertexNormal;
+in vec2 vertexTextureCoordinates;
 
 uniform Light light;
 uniform Material material;
@@ -33,10 +32,10 @@ void main()
   float objectDiffuse = max(dot(normalize(vertexNormal), lightDirection), 0.0);
   float objectSpecular = pow(max(dot(viewDirection, reflectDirection), 0.0), material.shininess);
 
-  vec3 diffuse = light.diffuse * material.diffuse * objectDiffuse;
-  vec3 specular = light.specular * material.specular * objectSpecular;
-  vec3 ambient = light.ambient * material.ambient;
-
+  vec3 diffuse = light.diffuse * objectDiffuse * vec3(texture(material.diffuse, vertexTextureCoordinates));
+  vec3 specular = light.specular * objectSpecular * vec3(texture(material.specular, vertexTextureCoordinates));
+  vec3 ambient = light.ambient * vec3(texture(material.diffuse, vertexTextureCoordinates));
   vec3 result = (ambient + diffuse + specular) * objectColor;
+
   color = vec4(result, 1.0f);
 }

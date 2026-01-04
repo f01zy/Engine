@@ -6,55 +6,52 @@
 #include <iostream>
 #include <string>
 
-#include "../third_party/glm/glm.hpp"
-#include "../third_party/glm/gtc/matrix_transform.hpp"
-#include "../third_party/glm/gtc/type_ptr.hpp"
-#include "../third_party/stb/stb_image.h"
 #include "Camera/Camera.h"
 #include "Shader/Shader.h"
+#include "Texture/Texture.h"
 
 float vertices[] = {
-    -0.5f, -0.5f, -0.5f, 0.0f,  0.0f,  -1.0f, //
-    0.5f,  -0.5f, -0.5f, 0.0f,  0.0f,  -1.0f, //
-    0.5f,  0.5f,  -0.5f, 0.0f,  0.0f,  -1.0f, //
-    0.5f,  0.5f,  -0.5f, 0.0f,  0.0f,  -1.0f, //
-    -0.5f, 0.5f,  -0.5f, 0.0f,  0.0f,  -1.0f, //
-    -0.5f, -0.5f, -0.5f, 0.0f,  0.0f,  -1.0f, //
+    -0.5f, -0.5f, -0.5f, 0.0f,  0.0f,  -1.0f, 0.0f, 0.0f, //
+    0.5f,  -0.5f, -0.5f, 0.0f,  0.0f,  -1.0f, 1.0f, 0.0f, //
+    0.5f,  0.5f,  -0.5f, 0.0f,  0.0f,  -1.0f, 1.0f, 1.0f, //
+    0.5f,  0.5f,  -0.5f, 0.0f,  0.0f,  -1.0f, 1.0f, 1.0f, //
+    -0.5f, 0.5f,  -0.5f, 0.0f,  0.0f,  -1.0f, 0.0f, 1.0f, //
+    -0.5f, -0.5f, -0.5f, 0.0f,  0.0f,  -1.0f, 0.0f, 0.0f, //
 
-    -0.5f, -0.5f, 0.5f,  0.0f,  0.0f,  1.0f, //
-    0.5f,  -0.5f, 0.5f,  0.0f,  0.0f,  1.0f, //
-    0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f, //
-    0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f, //
-    -0.5f, 0.5f,  0.5f,  0.0f,  0.0f,  1.0f, //
-    -0.5f, -0.5f, 0.5f,  0.0f,  0.0f,  1.0f, //
+    -0.5f, -0.5f, 0.5f,  0.0f,  0.0f,  1.0f,  0.0f, 0.0f, //
+    0.5f,  -0.5f, 0.5f,  0.0f,  0.0f,  1.0f,  1.0f, 0.0f, //
+    0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f, 1.0f, //
+    0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f, 1.0f, //
+    -0.5f, 0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f, 1.0f, //
+    -0.5f, -0.5f, 0.5f,  0.0f,  0.0f,  1.0f,  0.0f, 0.0f, //
 
-    -0.5f, 0.5f,  0.5f,  -1.0f, 0.0f,  0.0f, //
-    -0.5f, 0.5f,  -0.5f, -1.0f, 0.0f,  0.0f, //
-    -0.5f, -0.5f, -0.5f, -1.0f, 0.0f,  0.0f, //
-    -0.5f, -0.5f, -0.5f, -1.0f, 0.0f,  0.0f, //
-    -0.5f, -0.5f, 0.5f,  -1.0f, 0.0f,  0.0f, //
-    -0.5f, 0.5f,  0.5f,  -1.0f, 0.0f,  0.0f, //
+    -0.5f, 0.5f,  0.5f,  -1.0f, 0.0f,  0.0f,  1.0f, 0.0f, //
+    -0.5f, 0.5f,  -0.5f, -1.0f, 0.0f,  0.0f,  1.0f, 1.0f, //
+    -0.5f, -0.5f, -0.5f, -1.0f, 0.0f,  0.0f,  0.0f, 1.0f, //
+    -0.5f, -0.5f, -0.5f, -1.0f, 0.0f,  0.0f,  0.0f, 1.0f, //
+    -0.5f, -0.5f, 0.5f,  -1.0f, 0.0f,  0.0f,  0.0f, 0.0f, //
+    -0.5f, 0.5f,  0.5f,  -1.0f, 0.0f,  0.0f,  1.0f, 0.0f, //
 
-    0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f, //
-    0.5f,  0.5f,  -0.5f, 1.0f,  0.0f,  0.0f, //
-    0.5f,  -0.5f, -0.5f, 1.0f,  0.0f,  0.0f, //
-    0.5f,  -0.5f, -0.5f, 1.0f,  0.0f,  0.0f, //
-    0.5f,  -0.5f, 0.5f,  1.0f,  0.0f,  0.0f, //
-    0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f, //
+    0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, //
+    0.5f,  0.5f,  -0.5f, 1.0f,  0.0f,  0.0f,  1.0f, 1.0f, //
+    0.5f,  -0.5f, -0.5f, 1.0f,  0.0f,  0.0f,  0.0f, 1.0f, //
+    0.5f,  -0.5f, -0.5f, 1.0f,  0.0f,  0.0f,  0.0f, 1.0f, //
+    0.5f,  -0.5f, 0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 0.0f, //
+    0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, //
 
-    -0.5f, -0.5f, -0.5f, 0.0f,  -1.0f, 0.0f, //
-    0.5f,  -0.5f, -0.5f, 0.0f,  -1.0f, 0.0f, //
-    0.5f,  -0.5f, 0.5f,  0.0f,  -1.0f, 0.0f, //
-    0.5f,  -0.5f, 0.5f,  0.0f,  -1.0f, 0.0f, //
-    -0.5f, -0.5f, 0.5f,  0.0f,  -1.0f, 0.0f, //
-    -0.5f, -0.5f, -0.5f, 0.0f,  -1.0f, 0.0f, //
+    -0.5f, -0.5f, -0.5f, 0.0f,  -1.0f, 0.0f,  0.0f, 1.0f, //
+    0.5f,  -0.5f, -0.5f, 0.0f,  -1.0f, 0.0f,  1.0f, 1.0f, //
+    0.5f,  -0.5f, 0.5f,  0.0f,  -1.0f, 0.0f,  1.0f, 0.0f, //
+    0.5f,  -0.5f, 0.5f,  0.0f,  -1.0f, 0.0f,  1.0f, 0.0f, //
+    -0.5f, -0.5f, 0.5f,  0.0f,  -1.0f, 0.0f,  0.0f, 0.0f, //
+    -0.5f, -0.5f, -0.5f, 0.0f,  -1.0f, 0.0f,  0.0f, 1.0f, //
 
-    -0.5f, 0.5f,  -0.5f, 0.0f,  1.0f,  0.0f, //
-    0.5f,  0.5f,  -0.5f, 0.0f,  1.0f,  0.0f, //
-    0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f, //
-    0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f, //
-    -0.5f, 0.5f,  0.5f,  0.0f,  1.0f,  0.0f, //
-    -0.5f, 0.5f,  -0.5f, 0.0f,  1.0f,  0.0f  //
+    -0.5f, 0.5f,  -0.5f, 0.0f,  1.0f,  0.0f,  0.0f, 1.0f, //
+    0.5f,  0.5f,  -0.5f, 0.0f,  1.0f,  0.0f,  1.0f, 1.0f, //
+    0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f, //
+    0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f, //
+    -0.5f, 0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f, //
+    -0.5f, 0.5f,  -0.5f, 0.0f,  1.0f,  0.0f,  0.0f, 1.0f  //
 };
 
 const char *TITLE = "Sandbox";
@@ -131,14 +128,8 @@ int main() {
   Shader lightShader(PROJECT_PATH + "/src/shaders/light.vertex.glsl", PROJECT_PATH + "/src/shaders/light.fragment.glsl");
 
   shader.use();
-  shader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
-  shader.setVec3("light.ambient", 0.2f, 0.2f, 0.2f);
-  shader.setVec3("light.diffuse", 0.5f, 0.5f, 0.5f);
-  shader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
-  shader.setVec3("material.ambient", 1.0f, 0.5f, 0.31f);
-  shader.setVec3("material.diffuse", 1.0f, 0.5f, 0.31f);
-  shader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
-  shader.setFloat("material.shininess", 32.0f);
+  shader.setInt("material.diffuse", 0);
+  shader.setInt("material.specular", 1);
 
   unsigned VAO, VBO;
   glGenVertexArrays(1, &VAO);
@@ -146,10 +137,12 @@ int main() {
   glBindVertexArray(VAO);
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
   glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-  glVertexAttribPointer(0, 3, GL_FLOAT, false, 6 * sizeof(float), reinterpret_cast<void *>(0 * sizeof(float)));
+  glVertexAttribPointer(0, 3, GL_FLOAT, false, 8 * sizeof(float), reinterpret_cast<void *>(0 * sizeof(float)));
   glEnableVertexAttribArray(0);
-  glVertexAttribPointer(1, 3, GL_FLOAT, false, 6 * sizeof(float), reinterpret_cast<void *>(3 * sizeof(float)));
+  glVertexAttribPointer(1, 3, GL_FLOAT, false, 8 * sizeof(float), reinterpret_cast<void *>(3 * sizeof(float)));
   glEnableVertexAttribArray(1);
+  glVertexAttribPointer(2, 2, GL_FLOAT, false, 8 * sizeof(float), reinterpret_cast<void *>(6 * sizeof(float)));
+  glEnableVertexAttribArray(2);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindVertexArray(0);
 
@@ -157,7 +150,7 @@ int main() {
   glGenVertexArrays(1, &lightVAO);
   glBindVertexArray(lightVAO);
   glBindBuffer(GL_VERTEX_ARRAY, VBO);
-  glVertexAttribPointer(0, 3, GL_FLOAT, false, 6 * sizeof(float), reinterpret_cast<void *>(0 * sizeof(float)));
+  glVertexAttribPointer(0, 3, GL_FLOAT, false, 8 * sizeof(float), reinterpret_cast<void *>(0 * sizeof(float)));
   glEnableVertexAttribArray(0);
   glBindBuffer(GL_VERTEX_ARRAY, 0);
   glBindVertexArray(0);
@@ -166,7 +159,8 @@ int main() {
   glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
   glfwSetCursorPosCallback(window, mouseCallback);
   glfwSetScrollCallback(window, scrollCallback);
-
+  Texture containerDiffuseMap(PROJECT_PATH + "/assets/containerDiffuseMap.png");
+  Texture containerSpecularMap(PROJECT_PATH + "/assets/containerSpecularMap.png");
   float angle = 0.0f;
   float radius = 2.0f;
   float speed = 1.0f;
@@ -190,11 +184,22 @@ int main() {
     glm::mat4 model = glm::mat4(1.0f);
     glm::mat4 projection = glm::perspective(glm::radians(camera.getFov()), static_cast<float>(WIDTH) / static_cast<float>(HEIGHT), 0.1f, 100.0f);
     glm::mat4 view = camera.getViewMatrix();
+    shader.setVec3("light.ambient", 0.2f, 0.2f, 0.2f);
+    shader.setVec3("light.diffuse", 0.5f, 0.5f, 0.5f);
+    shader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+    shader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
+    shader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
+    shader.setFloat("material.shininess", 32.0f);
     shader.setMat4("view", view);
     shader.setMat4("model", model);
     shader.setMat4("projection", projection);
     shader.setVec3("viewPosition", camera.getPosition());
     shader.setVec3("light.position", lightPosition);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, containerDiffuseMap.getTexture());
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, containerSpecularMap.getTexture());
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLES, 0, 36);
     glBindVertexArray(0);
