@@ -19,6 +19,7 @@ public:
   Camera(glm::vec3 &position, glm::vec3 &direction);
   Camera(Camera &) = delete;
 
+  glm::vec3 getDirection();
   glm::vec3 getPosition();
   glm::mat4 getViewMatrix();
   float getFov();

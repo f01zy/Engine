@@ -8,9 +8,15 @@ struct Material {
 
 struct Light {
   vec3 position;
+  vec3 direction;
   vec3 ambient;
   vec3 diffuse;
   vec3 specular;
+  float cutOff;
+  float outerCutOff;
+  float constant;
+  float linear;
+  float quadratic;
 };
 
 out vec4 color;
@@ -35,7 +41,19 @@ void main()
   vec3 diffuse = light.diffuse * objectDiffuse * vec3(texture(material.diffuse, vertexTextureCoordinates));
   vec3 specular = light.specular * objectSpecular * vec3(texture(material.specular, vertexTextureCoordinates));
   vec3 ambient = light.ambient * vec3(texture(material.diffuse, vertexTextureCoordinates));
-  vec3 result = (ambient + diffuse + specular) * objectColor;
 
+  float lightDistance = length(light.position - fragmentPosition);
+  float attenuation = 1.0 / (light.constant + light.linear * lightDistance + light.quadratic * (lightDistance * lightDistance));
+  ambient *= attenuation;
+  diffuse *= attenuation;
+  specular *= attenuation;
+
+  float theta = dot(lightDirection, normalize(-light.direction));
+  float epsilon = light.cutOff - light.outerCutOff;
+  float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0f, 1.0f);
+  diffuse *= intensity;
+  specular *= intensity;
+
+  vec3 result = (ambient + diffuse + specular) * objectColor;
   color = vec4(result, 1.0f);
 }

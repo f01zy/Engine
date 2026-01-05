@@ -61,5 +61,6 @@ void Camera::updateDirection() {
 }
 
 float Camera::getFov() { return fov; }
+glm::vec3 Camera::getDirection() { return direction; }
 glm::vec3 Camera::getPosition() { return position; }
 glm::mat4 Camera::getViewMatrix() { return glm::lookAt(position, position + direction, up); }
