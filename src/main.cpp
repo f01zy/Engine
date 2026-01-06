@@ -11,6 +11,10 @@
 #include "Shader/Shader.h"
 #include "Texture/Texture.h"
 
+const char *TITLE = "Sandbox";
+const int WIDTH = 900, HEIGHT = 600;
+std::string PROJECT_PATH = "/home/aminov/Documents/Programming/OpenGL/Engine";
+
 float containerVertices[] = {
     -0.5f, -0.5f, -0.5f, 0.0f,  0.0f,  -1.0f, 0.0f, 0.0f, //
     0.5f,  -0.5f, -0.5f, 0.0f,  0.0f,  -1.0f, 1.0f, 0.0f, //
@@ -68,33 +72,46 @@ glm::vec3 containerPositions[] = {
     glm::vec3(-1.3f, 1.0f, -1.5f),   //
 };
 
-glm::vec3 pointLightPositions[] = {
+glm::vec3 lampPositions[] = {
     glm::vec3(0.7f, 0.2f, 2.0f),    //
     glm::vec3(2.3f, -3.3f, -4.0f),  //
     glm::vec3(-4.0f, 2.0f, -12.0f), //
     glm::vec3(0.0f, 0.0f, -3.0f),   //
 };
 
-const char *TITLE = "Sandbox";
-const int WIDTH = 900, HEIGHT = 600;
-std::string PROJECT_PATH = "/home/aminov/Documents/Programming/OpenGL/Engine";
+const int LAMPS = 4;
+const int CONTAINERS = 10;
 
-bool firstMouse = true;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 float lastX = WIDTH / 2.0f;
 float lastY = HEIGHT / 2.0f;
-
-float spotLightOuterCutOff = 18.0f;
-float spotLightCutOff = 13.0f;
-
-float lightConstant = 1.0f;
-float lightLinear = 0.09f;
-float lightQuadratic = 0.032f;
+bool firstMouse = true;
 
 glm::vec3 position(0.0f, 0.0f, 3.0f);
 glm::vec3 direction(0.0f, 0.0f, -1.0f);
 Camera camera(position, direction);
+
+glm::vec3 GLOBAL_LIGHT_DIRECTION(-0.2f, -1.0f, -0.3f);
+glm::vec3 GLOBAL_LIGHT_AMBIENT(0.05f, 0.05f, 0.05f);
+glm::vec3 GLOBAL_LIGHT_DIFFUSE(0.4f, 0.4f, 0.4f);
+glm::vec3 GLOBAL_LIGHT_SPECULAR(0.5f, 0.5f, 0.5f);
+
+glm::vec3 FLASHLIGHT_AMBIENT(0.0f, 0.0f, 0.0f);
+glm::vec3 FLASHLIGHT_DIFFUSE(1.0f, 1.0f, 1.0f);
+glm::vec3 FLASHLIGHT_SPECULAR(1.0f, 1.0f, 1.0f);
+const float FLASHLIGHT_CONSTANT = 1.0f;
+const float FLASHLIGHT_LINEAR = 0.09f;
+const float FLASHLIGHT_QUADRATIC = 0.032f;
+const float FLASHLIGHT_CUT_OFF = glm::cos(glm::radians(13.0f));
+const float FLASHLIGHT_OUTER_CUT_OFF = glm::cos(glm::radians(16.0f));
+
+glm::vec3 LAMP_AMBIENT(0.05f, 0.05f, 0.05f);
+glm::vec3 LAMP_DIFFUSE(0.8f, 0.8f, 0.8f);
+glm::vec3 LAMP_SPECULAR(1.0f, 1.0f, 1.0f);
+const float LAMP_CONSTANT = 1.0f;
+const float LAMP_LINEAR = 0.09f;
+const float LAMP_QUADRATIC = 0.032f;
 
 void processInput(GLFWwindow *window) {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
@@ -162,37 +179,39 @@ int main() {
   shader.setFloat("material.shininess", 32.0f);
 
   Lighting lighting;
-  DirectionalLight directionalLight;
-  directionalLight.direction = glm::vec3(-0.2f, -1.0f, -0.3f);
-  directionalLight.specular = glm::vec3(0.5f, 0.5f, 0.5f);
-  directionalLight.diffuse = glm::vec3(0.4f, 0.4f, 0.4f);
-  directionalLight.ambient = glm::vec3(0.05f, 0.05f, 0.05f);
-  lighting.setDirectionalLight(directionalLight);
+  DirectionalLight globalLight;
+  globalLight.id = 0;
+  globalLight.direction = GLOBAL_LIGHT_DIRECTION;
+  globalLight.ambient = GLOBAL_LIGHT_AMBIENT;
+  globalLight.diffuse = GLOBAL_LIGHT_DIFFUSE;
+  globalLight.specular = GLOBAL_LIGHT_SPECULAR;
+  lighting.addLight(LightType::DIRECTIONAL, globalLight);
 
-  int flashlightId = 0;
-  SpotLight spotLight;
-  spotLight.position = camera.getPosition();
-  spotLight.direction = camera.getDirection();
-  spotLight.ambient = glm::vec3(0.0f, 0.0f, 0.0f);
-  spotLight.diffuse = glm::vec3(1.0f, 1.0f, 1.0f);
-  spotLight.specular = glm::vec3(1.0f, 1.0f, 1.0f);
-  spotLight.constant = 1.0f;
-  spotLight.linear = 0.09f;
-  spotLight.quadratic = 0.032f;
-  spotLight.cutOff = glm::cos(glm::radians(13.0f));
-  spotLight.outerCutOff = glm::cos(glm::radians(16.0f));
-  lighting.addSpotLight(spotLight);
+  SpotLight flashlight;
+  flashlight.id = 0;
+  flashlight.position = camera.getPosition();
+  flashlight.direction = camera.getDirection();
+  flashlight.ambient = FLASHLIGHT_AMBIENT;
+  flashlight.diffuse = FLASHLIGHT_DIFFUSE;
+  flashlight.specular = FLASHLIGHT_SPECULAR;
+  flashlight.constant = FLASHLIGHT_CONSTANT;
+  flashlight.linear = FLASHLIGHT_LINEAR;
+  flashlight.quadratic = FLASHLIGHT_QUADRATIC;
+  flashlight.cutOff = FLASHLIGHT_CUT_OFF;
+  flashlight.outerCutOff = FLASHLIGHT_OUTER_CUT_OFF;
+  lighting.addLight(LightType::SPOT, flashlight);
 
-  for (int i = 0; i < 4; i++) {
-    PointLight pointLight;
-    pointLight.position = pointLightPositions[i];
-    pointLight.ambient = glm::vec3(0.05f, 0.05f, 0.05f);
-    pointLight.diffuse = glm::vec3(0.8f, 0.8f, 0.8f);
-    pointLight.specular = glm::vec3(1.0f, 1.0f, 1.0f);
-    pointLight.quadratic = 0.032f;
-    pointLight.linear = 0.09f;
-    pointLight.constant = 1.0f;
-    lighting.addPointLight(pointLight);
+  for (int i = 0; i < LAMPS; i++) {
+    PointLight lamp;
+    lamp.id = i;
+    lamp.position = lampPositions[i];
+    lamp.ambient = LAMP_AMBIENT;
+    lamp.diffuse = LAMP_DIFFUSE;
+    lamp.specular = LAMP_SPECULAR;
+    lamp.constant = LAMP_CONSTANT;
+    lamp.linear = LAMP_LINEAR;
+    lamp.quadratic = LAMP_QUADRATIC;
+    lighting.addLight(LightType::POINT, lamp);
   }
   lighting.uploadToShader(shader);
 
@@ -237,8 +256,9 @@ int main() {
     deltaTime = currentFrame - lastFrame;
     lastFrame = currentFrame;
 
-    lighting.setLightPosition(LightType::SPOT, flashlightId, camera.getPosition());
-    lighting.setLightDirection(LightType::SPOT, flashlightId, camera.getDirection());
+    flashlight.position = camera.getPosition();
+    flashlight.direction = camera.getDirection();
+    lighting.setLight(LightType::SPOT, flashlight.id, flashlight);
     lighting.uploadToShader(shader);
 
     glActiveTexture(GL_TEXTURE0);
@@ -256,22 +276,19 @@ int main() {
     shader.setMat4("projection", projection);
 
     glBindVertexArray(VAO);
-    for (unsigned int i = 0; i < 10; i++) {
-      float angle = 20.0f * i;
+    for (unsigned i = 0; i < CONTAINERS; i++) {
       model = glm::mat4(1.0f);
       model = glm::translate(model, containerPositions[i]);
-      model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
       shader.setMat4("model", model);
       glDrawArrays(GL_TRIANGLES, 0, 36);
     }
     glBindVertexArray(0);
 
-    const std::vector<PointLight> &pointLights = lighting.getPointLights();
+    const std::vector<PointLight> &lamps = lighting.getPointLights();
     lightShader.use();
-    for (int i = 0; i < pointLights.size(); i++) {
+    for (int i = 0; i < lamps.size(); i++) {
       model = glm::mat4(1.0f);
-      model = glm::translate(model, pointLights[i].position);
-      model = glm::scale(model, glm::vec3(0.2f));
+      model = glm::translate(model, lamps[i].position);
       lightShader.setMat4("view", view);
       lightShader.setMat4("model", model);
       lightShader.setMat4("projection", projection);

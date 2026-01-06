@@ -8,6 +8,7 @@
 enum LightType { DIRECTIONAL, POINT, SPOT };
 
 struct Light {
+  unsigned id;
   glm::vec3 ambient;
   glm::vec3 diffuse;
   glm::vec3 specular;
@@ -34,21 +35,16 @@ public:
   Lighting(Lighting &) = delete;
 
   void uploadToShader(Shader &shader);
-  void setDirectionalLight(const DirectionalLight &light);
-  void addPointLight(const PointLight &light);
-  void addSpotLight(const SpotLight &light);
-
+  void addLight(LightType type, const Light &light);
+  void setLight(LightType type, unsigned id, const Light &light);
   const std::vector<PointLight> &getPointLights();
 
-  void setLightPosition(LightType type, int id, glm::vec3 position);
-  void setLightDirection(LightType type, int id, glm::vec3 direction);
-
 private:
-  DirectionalLight directionalLight;
   std::vector<PointLight> pointLights;
   std::vector<SpotLight> spotLights;
+  DirectionalLight directionalLight;
 
   void uploadDirectionalLight(Shader &shader);
-  void uploadPointLight(Shader &shader, int id);
-  void uploadSpotLight(Shader &shader, int id);
+  void uploadPointLight(Shader &shader, unsigned id);
+  void uploadSpotLight(Shader &shader, unsigned id);
 };

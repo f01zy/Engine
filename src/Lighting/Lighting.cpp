@@ -14,31 +14,31 @@ void Lighting::uploadToShader(Shader &shader) {
   }
 }
 
-const std::vector<PointLight> &Lighting::getPointLights() { return pointLights; }
-
-void Lighting::setDirectionalLight(const DirectionalLight &light) { directionalLight = light; }
-
-void Lighting::addPointLight(const PointLight &light) { pointLights.push_back(light); }
-
-void Lighting::addSpotLight(const SpotLight &light) { spotLights.push_back(light); }
-
-void Lighting::setLightPosition(LightType type, int id, glm::vec3 position) {
-  if (type == LightType::POINT) {
-    pointLights[id].position = position;
-  }
-  if (type == LightType::SPOT) {
-    spotLights[id].position = position;
-  }
-}
-
-void Lighting::setLightDirection(LightType type, int id, glm::vec3 direction) {
+void Lighting::addLight(LightType type, const Light &light) {
   if (type == LightType::DIRECTIONAL) {
-    directionalLight.direction = direction;
+    directionalLight = static_cast<const DirectionalLight &>(light);
+  }
+  if (type == LightType::POINT) {
+    pointLights.push_back(static_cast<const PointLight &>(light));
   }
   if (type == LightType::SPOT) {
-    spotLights[id].direction = direction;
+    spotLights.push_back(static_cast<const SpotLight &>(light));
   }
 }
+
+void Lighting::setLight(LightType type, unsigned id, const Light &light) {
+  if (type == LightType::DIRECTIONAL) {
+    directionalLight = static_cast<const DirectionalLight &>(light);
+  }
+  if (type == LightType::POINT) {
+    pointLights[id] = static_cast<const PointLight &>(light);
+  }
+  if (type == LightType::SPOT) {
+    spotLights[id] = static_cast<const SpotLight &>(light);
+  }
+}
+
+const std::vector<PointLight> &Lighting::getPointLights() { return pointLights; }
 
 void Lighting::uploadDirectionalLight(Shader &shader) {
   shader.setVec3("directionalLight.direction", directionalLight.direction);
@@ -47,7 +47,7 @@ void Lighting::uploadDirectionalLight(Shader &shader) {
   shader.setVec3("directionalLight.specular", directionalLight.specular);
 }
 
-void Lighting::uploadPointLight(Shader &shader, int id) {
+void Lighting::uploadPointLight(Shader &shader, unsigned id) {
   PointLight light = pointLights[id];
   std::string lightId = std::to_string(id);
   shader.setVec3("pointLights[" + lightId + "].position", light.position);
@@ -59,7 +59,7 @@ void Lighting::uploadPointLight(Shader &shader, int id) {
   shader.setFloat("pointLights[" + lightId + "].quadratic", light.quadratic);
 }
 
-void Lighting::uploadSpotLight(Shader &shader, int id) {
+void Lighting::uploadSpotLight(Shader &shader, unsigned id) {
   SpotLight light = spotLights[id];
   std::string lightId = std::to_string(id);
   shader.setVec3("spotLights[" + lightId + "].position", light.position);
