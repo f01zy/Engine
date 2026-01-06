@@ -3,7 +3,6 @@
 #include <string>
 
 #include "../../third_party/glm/glm.hpp"
-#include "../../third_party/glm/gtc/matrix_transform.hpp"
 
 class Shader {
 public:

@@ -1,2 +1,2 @@
 BasedOnStyle: LLVM
-ColumnLimit: 1000
+ColumnLimit: 160
