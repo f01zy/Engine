@@ -1,3 +1,5 @@
+#include "Lighting/presets/Flashlight.h"
+#include "Lighting/presets/GlobalLight.h"
 #define GLEW_STATIC
 #define STB_IMAGE_IMPLEMENTATION
 
@@ -10,6 +12,8 @@
 #include "Lighting/Lighting.h"
 #include "Shader/Shader.h"
 #include "Texture/Texture.h"
+
+#include "Lighting/presets/Lamp.h"
 
 const char *TITLE = "Sandbox";
 const int WIDTH = 900, HEIGHT = 600;
@@ -92,27 +96,6 @@ glm::vec3 position(0.0f, 0.0f, 3.0f);
 glm::vec3 direction(0.0f, 0.0f, -1.0f);
 Camera camera(position, direction);
 
-glm::vec3 GLOBAL_LIGHT_DIRECTION(-0.2f, -1.0f, -0.3f);
-glm::vec3 GLOBAL_LIGHT_AMBIENT(0.05f, 0.05f, 0.05f);
-glm::vec3 GLOBAL_LIGHT_DIFFUSE(0.4f, 0.4f, 0.4f);
-glm::vec3 GLOBAL_LIGHT_SPECULAR(0.5f, 0.5f, 0.5f);
-
-glm::vec3 FLASHLIGHT_AMBIENT(0.0f, 0.0f, 0.0f);
-glm::vec3 FLASHLIGHT_DIFFUSE(1.0f, 1.0f, 1.0f);
-glm::vec3 FLASHLIGHT_SPECULAR(1.0f, 1.0f, 1.0f);
-const float FLASHLIGHT_CONSTANT = 1.0f;
-const float FLASHLIGHT_LINEAR = 0.09f;
-const float FLASHLIGHT_QUADRATIC = 0.032f;
-const float FLASHLIGHT_CUT_OFF = glm::cos(glm::radians(13.0f));
-const float FLASHLIGHT_OUTER_CUT_OFF = glm::cos(glm::radians(16.0f));
-
-glm::vec3 LAMP_AMBIENT(0.05f, 0.05f, 0.05f);
-glm::vec3 LAMP_DIFFUSE(0.8f, 0.8f, 0.8f);
-glm::vec3 LAMP_SPECULAR(1.0f, 1.0f, 1.0f);
-const float LAMP_CONSTANT = 1.0f;
-const float LAMP_LINEAR = 0.09f;
-const float LAMP_QUADRATIC = 0.032f;
-
 void processInput(GLFWwindow *window) {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, true);
@@ -179,38 +162,16 @@ int main() {
   shader.setFloat("material.shininess", 32.0f);
 
   Lighting lighting;
-  DirectionalLight globalLight;
-  globalLight.id = 0;
-  globalLight.direction = GLOBAL_LIGHT_DIRECTION;
-  globalLight.ambient = GLOBAL_LIGHT_AMBIENT;
-  globalLight.diffuse = GLOBAL_LIGHT_DIFFUSE;
-  globalLight.specular = GLOBAL_LIGHT_SPECULAR;
+  DirectionalLight globalLight = GLOBAL_LIGHT;
   lighting.addLight(LightType::DIRECTIONAL, globalLight);
 
-  SpotLight flashlight;
-  flashlight.id = 0;
-  flashlight.position = camera.getPosition();
-  flashlight.direction = camera.getDirection();
-  flashlight.ambient = FLASHLIGHT_AMBIENT;
-  flashlight.diffuse = FLASHLIGHT_DIFFUSE;
-  flashlight.specular = FLASHLIGHT_SPECULAR;
-  flashlight.constant = FLASHLIGHT_CONSTANT;
-  flashlight.linear = FLASHLIGHT_LINEAR;
-  flashlight.quadratic = FLASHLIGHT_QUADRATIC;
-  flashlight.cutOff = FLASHLIGHT_CUT_OFF;
-  flashlight.outerCutOff = FLASHLIGHT_OUTER_CUT_OFF;
+  SpotLight flashlight = FLASHLIGHT;
   lighting.addLight(LightType::SPOT, flashlight);
 
   for (int i = 0; i < LAMPS; i++) {
-    PointLight lamp;
+    PointLight lamp = LAMP;
     lamp.id = i;
     lamp.position = lampPositions[i];
-    lamp.ambient = LAMP_AMBIENT;
-    lamp.diffuse = LAMP_DIFFUSE;
-    lamp.specular = LAMP_SPECULAR;
-    lamp.constant = LAMP_CONSTANT;
-    lamp.linear = LAMP_LINEAR;
-    lamp.quadratic = LAMP_QUADRATIC;
     lighting.addLight(LightType::POINT, lamp);
   }
   lighting.uploadToShader(shader);
