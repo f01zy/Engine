@@ -10,7 +10,7 @@ const float YAW = -90.0f;
 const float PITCH = 0.0f;
 const float FOV = 45.0f;
 const float SENSITIVITY = 0.05f;
-const float SPEED = 6.0f;
+const float SPEED = 4.0f;
 
 enum Direction { FORWARD, BACK, LEFT, RIGHT };
 

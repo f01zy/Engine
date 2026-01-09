@@ -1,3 +1,5 @@
+#pragma once
+
 #include "../../third_party/glm/glm/glm.hpp"
 
 struct Light {

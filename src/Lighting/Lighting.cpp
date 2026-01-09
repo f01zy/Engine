@@ -16,8 +16,37 @@ void Lighting::uploadToShader(Shader &shader) {
 }
 
 void Lighting::addDirectionalLight(const DirectionalLight &light) { directionalLight = light; }
-void Lighting::addPointLight(const PointLight &light) { pointLights.push_back(light); }
-void Lighting::addSpotLight(const SpotLight &light) { spotLights.push_back(light); }
+
+void Lighting::addPointLight(const PointLight &light) {
+  pointLights.push_back(light);
+  unsigned id = pointLights.size() - 1;
+  cachedPointLightUniformNames.push_back({
+      "pointLights[" + std::to_string(id) + "].position",
+      "pointLights[" + std::to_string(id) + "].ambient",
+      "pointLights[" + std::to_string(id) + "].diffuse",
+      "pointLights[" + std::to_string(id) + "].specular",
+      "pointLights[" + std::to_string(id) + "].constant",
+      "pointLights[" + std::to_string(id) + "].linear",
+      "pointLights[" + std::to_string(id) + "].quadratic",
+  });
+}
+
+void Lighting::addSpotLight(const SpotLight &light) {
+  spotLights.push_back(light);
+  unsigned id = spotLights.size() - 1;
+  cachedSpotLightUniformNames.push_back({
+      "spotLights[" + std::to_string(id) + "].position",
+      "spotLights[" + std::to_string(id) + "].direction",
+      "spotLights[" + std::to_string(id) + "].ambient",
+      "spotLights[" + std::to_string(id) + "].diffuse",
+      "spotLights[" + std::to_string(id) + "].specular",
+      "spotLights[" + std::to_string(id) + "].constant",
+      "spotLights[" + std::to_string(id) + "].linear",
+      "spotLights[" + std::to_string(id) + "].quadratic",
+      "spotLights[" + std::to_string(id) + "].cutOff",
+      "spotLights[" + std::to_string(id) + "].outerCutOff",
+  });
+}
 
 void Lighting::changePointLight(unsigned id, const PointLight &light) {
   if (id > pointLights.size() - 1) {
@@ -26,6 +55,7 @@ void Lighting::changePointLight(unsigned id, const PointLight &light) {
   }
   pointLights[id] = light;
 }
+
 void Lighting::changeSpotLight(unsigned id, const SpotLight &light) {
   if (id > spotLights.size() - 1) {
     std::cerr << "Spot light with this id doesnt exists: " << id << "\n";
@@ -44,28 +74,36 @@ void Lighting::uploadDirectionalLight(Shader &shader) {
 }
 
 void Lighting::uploadPointLight(Shader &shader, unsigned id) {
-  PointLight light = pointLights[id];
-  std::string lightId = std::to_string(id);
-  shader.setVec3("pointLights[" + lightId + "].position", light.position);
-  shader.setVec3("pointLights[" + lightId + "].ambient", light.ambient);
-  shader.setVec3("pointLights[" + lightId + "].diffuse", light.diffuse);
-  shader.setVec3("pointLights[" + lightId + "].specular", light.specular);
-  shader.setFloat("pointLights[" + lightId + "].constant", light.constant);
-  shader.setFloat("pointLights[" + lightId + "].linear", light.linear);
-  shader.setFloat("pointLights[" + lightId + "].quadratic", light.quadratic);
+  if (id > pointLights.size() - 1) {
+    std::cerr << "Point light with this id doesnt exists: " << id << "\n";
+    return;
+  }
+  PointLight &light = pointLights[id];
+  CachedPointLightUniformNames &names = cachedPointLightUniformNames[id];
+  shader.setVec3(names.position, light.position);
+  shader.setVec3(names.ambient, light.ambient);
+  shader.setVec3(names.diffuse, light.diffuse);
+  shader.setVec3(names.specular, light.specular);
+  shader.setFloat(names.constant, light.constant);
+  shader.setFloat(names.linear, light.linear);
+  shader.setFloat(names.quadratic, light.quadratic);
 }
 
 void Lighting::uploadSpotLight(Shader &shader, unsigned id) {
-  SpotLight light = spotLights[id];
-  std::string lightId = std::to_string(id);
-  shader.setVec3("spotLights[" + lightId + "].position", light.position);
-  shader.setVec3("spotLights[" + lightId + "].direction", light.direction);
-  shader.setVec3("spotLights[" + lightId + "].ambient", light.ambient);
-  shader.setVec3("spotLights[" + lightId + "].diffuse", light.diffuse);
-  shader.setVec3("spotLights[" + lightId + "].specular", light.specular);
-  shader.setFloat("spotLights[" + lightId + "].constant", light.constant);
-  shader.setFloat("spotLights[" + lightId + "].linear", light.linear);
-  shader.setFloat("spotLights[" + lightId + "].quadratic", light.quadratic);
-  shader.setFloat("spotLights[" + lightId + "].cutOff", light.cutOff);
-  shader.setFloat("spotLights[" + lightId + "].outerCutOff", light.outerCutOff);
+  if (id > spotLights.size() - 1) {
+    std::cerr << "Spot light with this id doesnt exists: " << id << "\n";
+    return;
+  }
+  SpotLight &light = spotLights[id];
+  CachedSpotLightUniformNames &names = cachedSpotLightUniformNames[id];
+  shader.setVec3(names.position, light.position);
+  shader.setVec3(names.direction, light.direction);
+  shader.setVec3(names.ambient, light.ambient);
+  shader.setVec3(names.diffuse, light.diffuse);
+  shader.setVec3(names.specular, light.specular);
+  shader.setFloat(names.constant, light.constant);
+  shader.setFloat(names.linear, light.linear);
+  shader.setFloat(names.quadratic, light.quadratic);
+  shader.setFloat(names.cutOff, light.cutOff);
+  shader.setFloat(names.outerCutOff, light.outerCutOff);
 }
