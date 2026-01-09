@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Lighting.h"
+#include "../../types/Lighting.h"
 
 const glm::vec3 FLASHLIGHT_AMBIENT(0.0f, 0.0f, 0.0f);
 const glm::vec3 FLASHLIGHT_DIFFUSE(1.0f, 1.0f, 1.0f);

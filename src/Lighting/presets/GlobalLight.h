@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Lighting.h"
+#include "../../types/Lighting.h"
 
 const glm::vec3 GLOBAL_LIGHT_DIRECTION(-0.2f, -1.0f, -0.3f);
 const glm::vec3 GLOBAL_LIGHT_AMBIENT(0.05f, 0.05f, 0.05f);

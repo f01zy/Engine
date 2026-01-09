@@ -1,10 +1,11 @@
-#include "Lighting.h"
+#include <iostream>
 #include <string>
+
+#include "Lighting.h"
 
 Lighting::Lighting() {}
 
 void Lighting::uploadToShader(Shader &shader) {
-  shader.use();
   uploadDirectionalLight(shader);
   for (int i = 0; i < pointLights.size(); i++) {
     uploadPointLight(shader, i);
@@ -14,28 +15,23 @@ void Lighting::uploadToShader(Shader &shader) {
   }
 }
 
-void Lighting::addLight(LightType type, const Light &light) {
-  if (type == LightType::DIRECTIONAL) {
-    directionalLight = static_cast<const DirectionalLight &>(light);
-  }
-  if (type == LightType::POINT) {
-    pointLights.push_back(static_cast<const PointLight &>(light));
-  }
-  if (type == LightType::SPOT) {
-    spotLights.push_back(static_cast<const SpotLight &>(light));
-  }
-}
+void Lighting::addDirectionalLight(const DirectionalLight &light) { directionalLight = light; }
+void Lighting::addPointLight(const PointLight &light) { pointLights.push_back(light); }
+void Lighting::addSpotLight(const SpotLight &light) { spotLights.push_back(light); }
 
-void Lighting::setLight(LightType type, unsigned id, const Light &light) {
-  if (type == LightType::DIRECTIONAL) {
-    directionalLight = static_cast<const DirectionalLight &>(light);
+void Lighting::changePointLight(unsigned id, const PointLight &light) {
+  if (id > pointLights.size() - 1) {
+    std::cerr << "Point light with this id doesnt exists: " << id << "\n";
+    return;
   }
-  if (type == LightType::POINT) {
-    pointLights[id] = static_cast<const PointLight &>(light);
+  pointLights[id] = light;
+}
+void Lighting::changeSpotLight(unsigned id, const SpotLight &light) {
+  if (id > spotLights.size() - 1) {
+    std::cerr << "Spot light with this id doesnt exists: " << id << "\n";
+    return;
   }
-  if (type == LightType::SPOT) {
-    spotLights[id] = static_cast<const SpotLight &>(light);
-  }
+  spotLights[id] = light;
 }
 
 const std::vector<PointLight> &Lighting::getPointLights() { return pointLights; }

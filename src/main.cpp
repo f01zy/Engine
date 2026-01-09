@@ -1,5 +1,3 @@
-#include "Lighting/presets/Flashlight.h"
-#include "Lighting/presets/GlobalLight.h"
 #define GLEW_STATIC
 #define STB_IMAGE_IMPLEMENTATION
 
@@ -13,6 +11,8 @@
 #include "Shader/Shader.h"
 #include "Texture/Texture.h"
 
+#include "Lighting/presets/Flashlight.h"
+#include "Lighting/presets/GlobalLight.h"
 #include "Lighting/presets/Lamp.h"
 
 const char *TITLE = "Sandbox";
@@ -69,22 +69,14 @@ glm::vec3 containerPositions[] = {
     glm::vec3(-1.5f, -2.2f, -2.5f),  //
     glm::vec3(-3.8f, -2.0f, -12.3f), //
     glm::vec3(2.4f, -0.4f, -3.5f),   //
-    glm::vec3(-1.7f, 3.0f, -7.5f),   //
-    glm::vec3(1.3f, -2.0f, -2.5f),   //
-    glm::vec3(1.5f, 2.0f, -2.5f),    //
-    glm::vec3(1.5f, 0.2f, -1.5f),    //
-    glm::vec3(-1.3f, 1.0f, -1.5f),   //
 };
 
 glm::vec3 lampPositions[] = {
-    glm::vec3(0.7f, 0.2f, 2.0f),    //
-    glm::vec3(2.3f, -3.3f, -4.0f),  //
-    glm::vec3(-4.0f, 2.0f, -12.0f), //
-    glm::vec3(0.0f, 0.0f, -3.0f),   //
+    glm::vec3(0.7f, 0.2f, 2.0f), //
 };
 
-const int LAMPS = 4;
-const int CONTAINERS = 10;
+const int LAMPS = 1;
+const int CONTAINERS = 5;
 
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
@@ -163,16 +155,16 @@ int main() {
 
   Lighting lighting;
   DirectionalLight globalLight = GLOBAL_LIGHT;
-  lighting.addLight(LightType::DIRECTIONAL, globalLight);
+  lighting.addDirectionalLight(globalLight);
 
   SpotLight flashlight = FLASHLIGHT;
-  lighting.addLight(LightType::SPOT, flashlight);
+  lighting.addSpotLight(flashlight);
 
   for (int i = 0; i < LAMPS; i++) {
     PointLight lamp = LAMP;
     lamp.id = i;
     lamp.position = lampPositions[i];
-    lighting.addLight(LightType::POINT, lamp);
+    lighting.addPointLight(lamp);
   }
   lighting.uploadToShader(shader);
 
@@ -217,9 +209,10 @@ int main() {
     deltaTime = currentFrame - lastFrame;
     lastFrame = currentFrame;
 
+    shader.use();
     flashlight.position = camera.getPosition();
     flashlight.direction = camera.getDirection();
-    lighting.setLight(LightType::SPOT, flashlight.id, flashlight);
+    lighting.changeSpotLight(flashlight.id, flashlight);
     lighting.uploadToShader(shader);
 
     glActiveTexture(GL_TEXTURE0);
@@ -231,7 +224,6 @@ int main() {
     glm::mat4 projection = glm::perspective(glm::radians(camera.getFov()), static_cast<float>(WIDTH) / static_cast<float>(HEIGHT), 0.1f, 100.0f);
     glm::mat4 view = camera.getViewMatrix();
 
-    shader.use();
     shader.setVec3("viewPosition", camera.getPosition());
     shader.setMat4("view", view);
     shader.setMat4("projection", projection);
@@ -240,6 +232,7 @@ int main() {
     for (unsigned i = 0; i < CONTAINERS; i++) {
       model = glm::mat4(1.0f);
       model = glm::translate(model, containerPositions[i]);
+      model = glm::rotate(model, glm::radians(20.0f * i), glm::vec3(1.0f, 0.3f, 0.5f));
       shader.setMat4("model", model);
       glDrawArrays(GL_TRIANGLES, 0, 36);
     }
@@ -250,6 +243,7 @@ int main() {
     for (int i = 0; i < lamps.size(); i++) {
       model = glm::mat4(1.0f);
       model = glm::translate(model, lamps[i].position);
+      model = glm::scale(model, glm::vec3(0.2f));
       lightShader.setMat4("view", view);
       lightShader.setMat4("model", model);
       lightShader.setMat4("projection", projection);

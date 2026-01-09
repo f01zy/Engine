@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Lighting.h"
+#include "../../types/Lighting.h"
 
 const glm::vec3 LAMP_AMBIENT(0.05f, 0.05f, 0.05f);
 const glm::vec3 LAMP_DIFFUSE(0.8f, 0.8f, 0.8f);

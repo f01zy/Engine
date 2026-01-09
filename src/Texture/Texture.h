@@ -1,7 +1,8 @@
 #pragma once
 
-#include "../../third_party/stb/stb_image.h"
 #include <string>
+
+#include "../../third_party/stb/stb_image.h"
 
 class Texture final {
 public:

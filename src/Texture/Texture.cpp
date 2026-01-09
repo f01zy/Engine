@@ -1,6 +1,7 @@
-#include "Texture.h"
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+
+#include "Texture.h"
 
 Texture::Texture(std::string path) : path(path) {
   int width, height, channels;
