@@ -96,6 +96,8 @@ void mouseCallback(GLFWwindow *window, double xpos, double ypos) {
 
 void scrollCallback(GLFWwindow *window, double xoffset, double yoffset) { camera.processMouseScroll(yoffset); }
 
+void framebufferSizeCallback(GLFWwindow *window, int width, int height) { glViewport(0, 0, width, height); }
+
 int main() {
   glfwInit();
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -108,18 +110,22 @@ int main() {
     return -1;
   }
   glfwMakeContextCurrent(window);
+  glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+  glfwSetCursorPosCallback(window, mouseCallback);
+  glfwSetScrollCallback(window, scrollCallback);
+  // glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
   glewExperimental = true;
   if (glewInit()) {
     std::cerr << "Failed to initialize GLEW.\n";
     return -1;
   }
-  glViewport(0, 0, WIDTH, HEIGHT);
+  glEnable(GL_DEPTH_TEST);
 
   Shader shader(PROJECT_PATH + "/src/shaders/vertex.glsl", PROJECT_PATH + "/src/shaders/fragment.glsl");
   Shader lightShader(PROJECT_PATH + "/src/shaders/light.vertex.glsl", PROJECT_PATH + "/src/shaders/light.fragment.glsl");
 
   shader.use();
-  shader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
+  shader.setVec3("objectColor", 1.0f, 1.0f, 1.0f);
   shader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
   shader.setInt("material.diffuse", 0);
   shader.setInt("material.specular", 1);
@@ -127,14 +133,11 @@ int main() {
 
   Lighting lighting;
   DirectionalLight globalLight = GLOBAL_LIGHT;
-  lighting.addDirectionalLight(globalLight);
-
   SpotLight flashlight = FLASHLIGHT;
+  lighting.addDirectionalLight(globalLight);
   lighting.addSpotLight(flashlight);
-
   for (int i = 0; i < LAMPS; i++) {
     PointLight lamp = LAMP;
-    lamp.id = i;
     lamp.position = lampPositions[i];
     lighting.addPointLight(lamp);
   }
@@ -164,10 +167,6 @@ int main() {
   glBindBuffer(GL_VERTEX_ARRAY, 0);
   glBindVertexArray(0);
 
-  glEnable(GL_DEPTH_TEST);
-  glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-  glfwSetCursorPosCallback(window, mouseCallback);
-  glfwSetScrollCallback(window, scrollCallback);
   Texture containerDiffuseMap(PROJECT_PATH + "/assets/containerDiffuseMap.png");
   Texture containerSpecularMap(PROJECT_PATH + "/assets/containerSpecularMap.png");
 
@@ -184,7 +183,7 @@ int main() {
     shader.use();
     flashlight.position = camera.getPosition();
     flashlight.direction = camera.getDirection();
-    lighting.changeSpotLight(flashlight.id, flashlight);
+    lighting.changeSpotLight(0, flashlight);
     lighting.uploadToShader(shader);
 
     glActiveTexture(GL_TEXTURE0);

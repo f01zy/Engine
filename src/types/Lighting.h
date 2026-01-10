@@ -2,27 +2,29 @@
 
 #include "../../third_party/glm/glm/glm.hpp"
 
-struct Light {
-  unsigned id;
+struct DirectionalLight {
+  glm::vec3 direction;
   glm::vec3 ambient;
   glm::vec3 diffuse;
   glm::vec3 specular;
 };
 
-struct DirectionalLight : Light {
-  glm::vec3 direction;
-};
-
-struct PointLight : Light {
+struct PointLight {
   glm::vec3 position;
+  glm::vec3 ambient;
+  glm::vec3 diffuse;
+  glm::vec3 specular;
   float constant;
   float linear;
   float quadratic;
 };
 
-struct SpotLight : Light {
-  glm::vec3 direction;
+struct SpotLight {
   glm::vec3 position;
+  glm::vec3 direction;
+  glm::vec3 ambient;
+  glm::vec3 diffuse;
+  glm::vec3 specular;
   float constant;
   float linear;
   float quadratic;

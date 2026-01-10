@@ -1,4 +1,3 @@
-#include <iostream>
 #include <string>
 
 #include "Lighting.h"
@@ -48,21 +47,9 @@ void Lighting::addSpotLight(const SpotLight &light) {
   });
 }
 
-void Lighting::changePointLight(unsigned id, const PointLight &light) {
-  if (id > pointLights.size() - 1) {
-    std::cerr << "Point light with this id doesnt exists: " << id << "\n";
-    return;
-  }
-  pointLights[id] = light;
-}
+void Lighting::changePointLight(unsigned id, const PointLight &light) { pointLights[id] = light; }
 
-void Lighting::changeSpotLight(unsigned id, const SpotLight &light) {
-  if (id > spotLights.size() - 1) {
-    std::cerr << "Spot light with this id doesnt exists: " << id << "\n";
-    return;
-  }
-  spotLights[id] = light;
-}
+void Lighting::changeSpotLight(unsigned id, const SpotLight &light) { spotLights[id] = light; }
 
 const std::vector<PointLight> &Lighting::getPointLights() { return pointLights; }
 
@@ -74,10 +61,6 @@ void Lighting::uploadDirectionalLight(Shader &shader) {
 }
 
 void Lighting::uploadPointLight(Shader &shader, unsigned id) {
-  if (id > pointLights.size() - 1) {
-    std::cerr << "Point light with this id doesnt exists: " << id << "\n";
-    return;
-  }
   PointLight &light = pointLights[id];
   CachedPointLightUniformNames &names = cachedPointLightUniformNames[id];
   shader.setVec3(names.position, light.position);
@@ -90,10 +73,6 @@ void Lighting::uploadPointLight(Shader &shader, unsigned id) {
 }
 
 void Lighting::uploadSpotLight(Shader &shader, unsigned id) {
-  if (id > spotLights.size() - 1) {
-    std::cerr << "Spot light with this id doesnt exists: " << id << "\n";
-    return;
-  }
   SpotLight &light = spotLights[id];
   CachedSpotLightUniformNames &names = cachedSpotLightUniformNames[id];
   shader.setVec3(names.position, light.position);
