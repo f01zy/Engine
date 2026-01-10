@@ -2,9 +2,9 @@
 
 #include <GLFW/glfw3.h>
 
-#include "../../third_party/glm/glm/glm.hpp"
-#include "../../third_party/glm/glm/gtc/matrix_transform.hpp"
-#include "../../third_party/glm/glm/gtc/type_ptr.hpp"
+#include <glm.hpp>
+#include <gtc/matrix_transform.hpp>
+#include <gtc/type_ptr.hpp>
 
 const float YAW = -90.0f;
 const float PITCH = 0.0f;

@@ -1,9 +1,8 @@
 #pragma once
 
-#include <unordered_map>
+#include <glm.hpp>
 #include <vector>
 
-#include "../../third_party/glm/glm/glm.hpp"
 #include "../Shader/Shader.h"
 #include "../types/CachedUniformNames.h"
 #include "../types/Lighting.h"

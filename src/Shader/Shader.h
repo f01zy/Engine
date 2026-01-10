@@ -1,8 +1,7 @@
 #pragma once
 
+#include <glm.hpp>
 #include <string>
-
-#include "../../third_party/glm/glm/glm.hpp"
 
 class Shader {
 public:

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../third_party/glm/glm/glm.hpp"
+#include <glm.hpp>
 
 struct DirectionalLight {
   glm::vec3 direction;
