@@ -14,9 +14,9 @@ void Lighting::uploadToShader(Shader &shader) {
   }
 }
 
-void Lighting::addDirectionalLight(const DirectionalLight &light) { directionalLight = light; }
+void Lighting::addDirectionalLight(const Types::DirectionalLight &light) { directionalLight = light; }
 
-void Lighting::addPointLight(const PointLight &light) {
+void Lighting::addPointLight(const Types::PointLight &light) {
   pointLights.push_back(light);
   unsigned id = pointLights.size() - 1;
   cachedPointLightUniformNames.push_back({
@@ -30,7 +30,7 @@ void Lighting::addPointLight(const PointLight &light) {
   });
 }
 
-void Lighting::addSpotLight(const SpotLight &light) {
+void Lighting::addSpotLight(const Types::SpotLight &light) {
   spotLights.push_back(light);
   unsigned id = spotLights.size() - 1;
   cachedSpotLightUniformNames.push_back({
@@ -47,11 +47,11 @@ void Lighting::addSpotLight(const SpotLight &light) {
   });
 }
 
-void Lighting::changePointLight(unsigned id, const PointLight &light) { pointLights[id] = light; }
+void Lighting::changePointLight(unsigned id, const Types::PointLight &light) { pointLights[id] = light; }
 
-void Lighting::changeSpotLight(unsigned id, const SpotLight &light) { spotLights[id] = light; }
+void Lighting::changeSpotLight(unsigned id, const Types::SpotLight &light) { spotLights[id] = light; }
 
-const std::vector<PointLight> &Lighting::getPointLights() { return pointLights; }
+const std::vector<Types::PointLight> &Lighting::getPointLights() { return pointLights; }
 
 void Lighting::uploadDirectionalLight(Shader &shader) {
   shader.setVec3("directionalLight.direction", directionalLight.direction);
@@ -61,8 +61,8 @@ void Lighting::uploadDirectionalLight(Shader &shader) {
 }
 
 void Lighting::uploadPointLight(Shader &shader, unsigned id) {
-  PointLight &light = pointLights[id];
-  CachedPointLightUniformNames &names = cachedPointLightUniformNames[id];
+  Types::PointLight &light = pointLights[id];
+  Types::CachedPointLightUniformNames &names = cachedPointLightUniformNames[id];
   shader.setVec3(names.position, light.position);
   shader.setVec3(names.ambient, light.ambient);
   shader.setVec3(names.diffuse, light.diffuse);
@@ -73,8 +73,8 @@ void Lighting::uploadPointLight(Shader &shader, unsigned id) {
 }
 
 void Lighting::uploadSpotLight(Shader &shader, unsigned id) {
-  SpotLight &light = spotLights[id];
-  CachedSpotLightUniformNames &names = cachedSpotLightUniformNames[id];
+  Types::SpotLight &light = spotLights[id];
+  Types::CachedSpotLightUniformNames &names = cachedSpotLightUniformNames[id];
   shader.setVec3(names.position, light.position);
   shader.setVec3(names.direction, light.direction);
   shader.setVec3(names.ambient, light.ambient);

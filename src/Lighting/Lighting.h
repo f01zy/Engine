@@ -12,20 +12,20 @@ public:
   Lighting();
   Lighting(Lighting &) = delete;
 
-  void addDirectionalLight(const DirectionalLight &light);
-  void addPointLight(const PointLight &light);
-  void addSpotLight(const SpotLight &light);
-  void changePointLight(unsigned id, const PointLight &light);
-  void changeSpotLight(unsigned id, const SpotLight &light);
+  void addDirectionalLight(const Types::DirectionalLight &light);
+  void addPointLight(const Types::PointLight &light);
+  void addSpotLight(const Types::SpotLight &light);
+  void changePointLight(unsigned id, const Types::PointLight &light);
+  void changeSpotLight(unsigned id, const Types::SpotLight &light);
   void uploadToShader(Shader &shader);
-  const std::vector<PointLight> &getPointLights();
+  const std::vector<Types::PointLight> &getPointLights();
 
 private:
-  DirectionalLight directionalLight;
-  std::vector<PointLight> pointLights;
-  std::vector<SpotLight> spotLights;
-  std::vector<CachedPointLightUniformNames> cachedPointLightUniformNames;
-  std::vector<CachedSpotLightUniformNames> cachedSpotLightUniformNames;
+  Types::DirectionalLight directionalLight;
+  std::vector<Types::PointLight> pointLights;
+  std::vector<Types::SpotLight> spotLights;
+  std::vector<Types::CachedPointLightUniformNames> cachedPointLightUniformNames;
+  std::vector<Types::CachedSpotLightUniformNames> cachedSpotLightUniformNames;
 
   void uploadDirectionalLight(Shader &shader);
   void uploadPointLight(Shader &shader, unsigned id);

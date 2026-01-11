@@ -2,6 +2,7 @@
 
 #include <string>
 
+namespace Types {
 struct CachedPointLightUniformNames {
   std::string position;
   std::string ambient;
@@ -24,3 +25,4 @@ struct CachedSpotLightUniformNames {
   std::string cutOff;
   std::string outerCutOff;
 };
+} // namespace Types

@@ -2,6 +2,7 @@
 
 #include <glm.hpp>
 
+namespace Types {
 struct DirectionalLight {
   glm::vec3 direction;
   glm::vec3 ambient;
@@ -31,3 +32,4 @@ struct SpotLight {
   float cutOff;
   float outerCutOff;
 };
+} // namespace Types

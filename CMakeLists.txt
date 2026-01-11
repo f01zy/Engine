@@ -9,6 +9,7 @@ set(SOURCE
   ./src/Camera/Camera.cpp 
   ./src/Lighting/Lighting.cpp
   ./src/Mesh/Mesh.cpp
+  ./src/Model/Model.cpp
 ) 
 add_executable(main ${SOURCE})
 
