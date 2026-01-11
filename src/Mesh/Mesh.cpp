@@ -1,6 +1,6 @@
 #include <GL/glew.h>
+#include <GL/glext.h>
 #include <cstddef>
-#include <iostream>
 
 #include "Mesh.h"
 
@@ -17,8 +17,8 @@ void Mesh::setupMesh() {
   glGenBuffers(1, &IBO);
   glBindVertexArray(VAO);
 
-  glBindBuffer(GL_VERTEX_ARRAY, VBO);
-  glBufferData(GL_VERTEX_ARRAY, vertices.size() * sizeof(Types::Vertex), &vertices[0], GL_STATIC_DRAW);
+  glBindBuffer(GL_ARRAY_BUFFER, VBO);
+  glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Types::Vertex), &vertices[0], GL_STATIC_DRAW);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned), &indices[0], GL_STATIC_DRAW);
 
@@ -28,34 +28,33 @@ void Mesh::setupMesh() {
   glEnableVertexAttribArray(1);
   glVertexAttribPointer(2, 2, GL_FLOAT, false, sizeof(Types::Vertex), reinterpret_cast<void *>(offsetof(Types::Vertex, textureCoordinates)));
   glEnableVertexAttribArray(2);
-  glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Types::Vertex), reinterpret_cast<void *>(offsetof(Types::Vertex, tangent)));
+  glVertexAttribPointer(3, 3, GL_FLOAT, false, sizeof(Types::Vertex), reinterpret_cast<void *>(offsetof(Types::Vertex, tangent)));
   glEnableVertexAttribArray(3);
-  glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(Types::Vertex), reinterpret_cast<void *>(offsetof(Types::Vertex, bitangent)));
+  glVertexAttribPointer(4, 3, GL_FLOAT, false, sizeof(Types::Vertex), reinterpret_cast<void *>(offsetof(Types::Vertex, bitangent)));
   glEnableVertexAttribArray(4);
 
   glBindVertexArray(0);
 }
 
 void Mesh::draw(Shader &shader) {
-  unsigned diffuse = 1;
-  unsigned specular = 1;
-  unsigned normal = 1;
-  unsigned height = 1;
+  unsigned diffuse = 1, specular = 1, normal = 1, height = 1;
   for (int i = 0; i < textures.size(); i++) {
     glActiveTexture(GL_TEXTURE0 + i);
     std::string number;
     std::string name = textures[i].type;
     if (name == "textureDiffuse") {
       number = std::to_string(diffuse++);
-    } else if (name == "textureSpecular") {
+    }
+    if (name == "textureSpecular") {
       number = std::to_string(specular++);
-    } else if (name == "textureNormal") {
+    }
+    if (name == "textureNormal") {
       number = std::to_string(normal++);
-    } else if (name == "textureHeight") {
+    }
+    if (name == "textureHeight") {
       number = std::to_string(height++);
     }
     std::string uniformName = name + number;
-    std::cout << uniformName << std::endl;
     shader.setFloat(uniformName, i);
     glBindTexture(GL_TEXTURE_2D, textures[i].id);
   }

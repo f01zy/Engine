@@ -124,9 +124,9 @@ int main() {
     model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
     model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
     shader.setMat4("model", model);
-    shader.setVec3("viewPosition", camera.getPosition());
     shader.setMat4("view", view);
     shader.setMat4("projection", projection);
+    shader.setVec3("viewPosition", camera.getPosition());
     backpack.draw(shader);
 
     glfwSwapBuffers(window);
