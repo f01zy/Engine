@@ -44,18 +44,15 @@ void Mesh::draw(Shader &shader) {
     std::string name = textures[i].type;
     if (name == "textureDiffuse") {
       number = std::to_string(diffuse++);
-    }
-    if (name == "textureSpecular") {
+    } else if (name == "textureSpecular") {
       number = std::to_string(specular++);
-    }
-    if (name == "textureNormal") {
+    } else if (name == "textureNormal") {
       number = std::to_string(normal++);
-    }
-    if (name == "textureHeight") {
+    } else if (name == "textureHeight") {
       number = std::to_string(height++);
     }
     std::string uniformName = name + number;
-    shader.setFloat(uniformName, i);
+    shader.setInt(uniformName, i);
     glBindTexture(GL_TEXTURE_2D, textures[i].id);
   }
   glBindVertexArray(VAO);

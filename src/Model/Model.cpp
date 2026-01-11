@@ -10,6 +10,7 @@ void Model::draw(Shader &shader) {
 }
 
 void Model::loadModel(std::string path) {
+  std::cout << "Loading model: " << path << "\n";
   Assimp::Importer import;
   const aiScene *scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
   if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
@@ -52,7 +53,7 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene) {
     normal.z = mesh->mNormals[i].z;
     vertex.normal = normal;
 
-    if (mesh->HasTextureCoords(i)) {
+    if (mesh->HasTextureCoords(0)) {
       glm::vec2 textureCoordinates;
       textureCoordinates.x = mesh->mTextureCoords[0][i].x;
       textureCoordinates.y = mesh->mTextureCoords[0][i].y;
