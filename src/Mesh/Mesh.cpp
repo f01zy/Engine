@@ -4,7 +4,7 @@
 
 #include "Mesh.h"
 
-Mesh::Mesh(std::vector<Types::Vertex> vertices, std::vector<Types::Texture> textures, std::vector<unsigned> indices) {
+Mesh::Mesh(std::vector<Types::Vertex> &vertices, std::vector<Types::Texture> &textures, std::vector<unsigned> &indices) {
   this->vertices = vertices;
   this->textures = textures;
   this->indices = indices;
@@ -28,10 +28,6 @@ void Mesh::setupMesh() {
   glEnableVertexAttribArray(1);
   glVertexAttribPointer(2, 2, GL_FLOAT, false, sizeof(Types::Vertex), reinterpret_cast<void *>(offsetof(Types::Vertex, textureCoordinates)));
   glEnableVertexAttribArray(2);
-  glVertexAttribPointer(3, 3, GL_FLOAT, false, sizeof(Types::Vertex), reinterpret_cast<void *>(offsetof(Types::Vertex, tangent)));
-  glEnableVertexAttribArray(3);
-  glVertexAttribPointer(4, 3, GL_FLOAT, false, sizeof(Types::Vertex), reinterpret_cast<void *>(offsetof(Types::Vertex, bitangent)));
-  glEnableVertexAttribArray(4);
 
   glBindVertexArray(0);
 }
@@ -46,10 +42,6 @@ void Mesh::draw(Shader &shader) {
       number = std::to_string(diffuse++);
     } else if (name == "textureSpecular") {
       number = std::to_string(specular++);
-    } else if (name == "textureNormal") {
-      number = std::to_string(normal++);
-    } else if (name == "textureHeight") {
-      number = std::to_string(height++);
     }
     std::string uniformName = name + number;
     shader.setInt(uniformName, i);

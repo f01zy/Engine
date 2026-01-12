@@ -92,6 +92,7 @@ int main() {
   Shader shader(PROJECT_PATH + "/src/shaders/vertex.glsl", PROJECT_PATH + "/src/shaders/fragment.glsl");
   Shader lightShader(PROJECT_PATH + "/src/shaders/light.vertex.glsl", PROJECT_PATH + "/src/shaders/light.fragment.glsl");
   Model backpack(PROJECT_PATH + "/resources/objects/backpack/backpack.obj");
+  Model gun(PROJECT_PATH + "/resources/objects/gun/pistol_tauros.obj");
 
   Lighting lighting;
   Types::DirectionalLight globalLight = GLOBAL_LIGHT;
@@ -127,7 +128,7 @@ int main() {
     shader.setMat4("view", view);
     shader.setMat4("projection", projection);
     shader.setVec3("viewPosition", camera.getPosition());
-    backpack.draw(shader);
+    gun.draw(shader);
 
     glfwSwapBuffers(window);
   }

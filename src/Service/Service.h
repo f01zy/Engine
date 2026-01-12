@@ -7,4 +7,5 @@ public:
   Service();
   Service(Service &) = delete;
   void readTextFromFile(std::string path, std::string &result);
+  int getRelativePathStartsIndex(std::string path);
 };

@@ -1,5 +1,6 @@
 #include <iostream>
 
+#include "../Service/Service.h"
 #include "../Texture/Texture.h"
 #include "Model.h"
 
@@ -11,13 +12,14 @@ void Model::draw(Shader &shader) {
 
 void Model::loadModel(std::string path) {
   std::cout << "Loading model: " << path << "\n";
+  Service service;
   Assimp::Importer import;
-  const aiScene *scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
+  const aiScene *scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
   if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
     std::cerr << "ERROR::ASSIMP::" << import.GetErrorString() << "\n";
     return;
   }
-  directory = path.substr(0, path.find_last_of('/'));
+  directory = path.substr(0, service.getRelativePathStartsIndex(path));
   processNode(scene->mRootNode, scene);
 }
 
@@ -39,15 +41,12 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene) {
   for (int i = 0; i < mesh->mNumVertices; i++) {
     Types::Vertex vertex;
     glm::vec3 position;
-    glm::vec3 normal;
-    glm::vec3 tangent;
-    glm::vec3 bitangent;
-
     position.x = mesh->mVertices[i].x;
     position.y = mesh->mVertices[i].y;
     position.z = mesh->mVertices[i].z;
     vertex.position = position;
 
+    glm::vec3 normal;
     normal.x = mesh->mNormals[i].x;
     normal.y = mesh->mNormals[i].y;
     normal.z = mesh->mNormals[i].z;
@@ -61,16 +60,6 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene) {
     } else {
       vertex.textureCoordinates = glm::vec2(0.0f, 0.0f);
     }
-
-    tangent.x = mesh->mTangents[i].x;
-    tangent.y = mesh->mTangents[i].y;
-    tangent.z = mesh->mTangents[i].z;
-    vertex.tangent = tangent;
-
-    bitangent.x = mesh->mBitangents[i].x;
-    bitangent.y = mesh->mBitangents[i].y;
-    bitangent.z = mesh->mBitangents[i].z;
-    vertex.bitangent = bitangent;
     vertices.push_back(vertex);
   }
 
@@ -87,10 +76,6 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene) {
     textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
     std::vector<Types::Texture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "textureSpecular");
     textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
-    std::vector<Types::Texture> normalMaps = loadMaterialTextures(material, aiTextureType_HEIGHT, "textureNormal");
-    textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
-    std::vector<Types::Texture> heightMaps = loadMaterialTextures(material, aiTextureType_AMBIENT, "textureHeight");
-    textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
   }
 
   return Mesh(vertices, textures, indices);
@@ -110,8 +95,11 @@ std::vector<Types::Texture> Model::loadMaterialTextures(aiMaterial *mat, aiTextu
       }
     }
     if (!skip) {
+      Service service;
       Types::Texture texture;
-      std::string texturePath = directory + "/" + str.C_Str();
+      std::string tempPath = std::string(str.C_Str());
+      std::string relativePath = tempPath.substr(service.getRelativePathStartsIndex(tempPath), tempPath.size());
+      std::string texturePath = directory + "/" + relativePath;
       texture.id = Texture(texturePath).getTexture();
       texture.type = typeName;
       texture.path = str.C_Str();

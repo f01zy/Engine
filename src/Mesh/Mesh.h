@@ -7,7 +7,7 @@
 
 class Mesh final {
 public:
-  Mesh(std::vector<Types::Vertex> vertices, std::vector<Types::Texture> textures, std::vector<unsigned> indices);
+  Mesh(std::vector<Types::Vertex> &vertices, std::vector<Types::Texture> &textures, std::vector<unsigned> &indices);
   void draw(Shader &shader);
 
 private:

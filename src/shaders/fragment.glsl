@@ -106,9 +106,9 @@ void main() {
   vec3 normal = normalize(vertexNormal);
   vec3 viewDirection = normalize(viewPosition - fragmentPosition);
   vec3 result = calcDirectionalLight(directionalLight, normal, viewDirection);
-  // for (int i = 0; i < POINT_LIGHTS; i++) {
-  //   result += calcPointLight(pointLights[i], normal, fragmentPosition, viewDirection);
-  // }
+  for (int i = 0; i < POINT_LIGHTS; i++) {
+    // result += calcPointLight(pointLights[i], normal, fragmentPosition, viewDirection);
+  }
   for (int i = 0; i < SPOT_LIGHTS; i++) {
     result += calcSpotLight(spotLights[i], normal, fragmentPosition, viewDirection);
   }
