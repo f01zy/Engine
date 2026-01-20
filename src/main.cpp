@@ -13,6 +13,7 @@
 #include "Model/Model.h"
 #include "Shader/Shader.h"
 #include "Texture/Texture.h"
+#include "vertices.h"
 
 const char *TITLE = "Sandbox";
 const int WIDTH = 900, HEIGHT = 600;
@@ -87,12 +88,13 @@ int main() {
     return -1;
   }
   glEnable(GL_DEPTH_TEST);
+  glDepthFunc(GL_LESS);
   stbi_set_flip_vertically_on_load(true);
 
   Shader shader(PROJECT_PATH + "/src/shaders/vertex.glsl", PROJECT_PATH + "/src/shaders/fragment.glsl");
   Shader lightShader(PROJECT_PATH + "/src/shaders/light.vertex.glsl", PROJECT_PATH + "/src/shaders/light.fragment.glsl");
-  Model backpack(PROJECT_PATH + "/resources/objects/backpack/backpack.obj");
-  Model gun(PROJECT_PATH + "/resources/objects/gun/pistol_tauros.obj");
+  Texture metal(PROJECT_PATH + "/resources/textures/metal.jpg");
+  Texture marble(PROJECT_PATH + "/resources/textures/marble.jpg");
 
   Lighting lighting;
   Types::DirectionalLight globalLight = GLOBAL_LIGHT;
@@ -101,11 +103,40 @@ int main() {
   lighting.addSpotLight(flashlight);
   lighting.uploadToShader(shader);
 
+  unsigned cubeVAO, cubeVBO;
+  glGenVertexArrays(1, &cubeVAO);
+  glGenBuffers(1, &cubeVBO);
+  glBindVertexArray(cubeVAO);
+  glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(CUBE_VERTICES), CUBE_VERTICES, GL_STATIC_DRAW);
+  glVertexAttribPointer(0, 3, GL_FLOAT, false, 8 * sizeof(float), reinterpret_cast<void *>(0 * sizeof(float)));
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(1, 3, GL_FLOAT, false, 8 * sizeof(float), reinterpret_cast<void *>(3 * sizeof(float)));
+  glEnableVertexAttribArray(1);
+  glVertexAttribPointer(2, 2, GL_FLOAT, false, 8 * sizeof(float), reinterpret_cast<void *>(6 * sizeof(float)));
+  glEnableVertexAttribArray(2);
+  glBindVertexArray(0);
+
+  unsigned planeVAO, planeVBO;
+  glGenVertexArrays(1, &planeVAO);
+  glGenBuffers(1, &planeVBO);
+  glBindVertexArray(planeVAO);
+  glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(PLANE_VERTICES), PLANE_VERTICES, GL_STATIC_DRAW);
+  glVertexAttribPointer(0, 3, GL_FLOAT, false, 8 * sizeof(float), reinterpret_cast<void *>(0 * sizeof(float)));
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(1, 3, GL_FLOAT, false, 8 * sizeof(float), reinterpret_cast<void *>(3 * sizeof(float)));
+  glEnableVertexAttribArray(1);
+  glVertexAttribPointer(2, 2, GL_FLOAT, false, 8 * sizeof(float), reinterpret_cast<void *>(6 * sizeof(float)));
+  glEnableVertexAttribArray(2);
+  glBindVertexArray(0);
+
   while (!glfwWindowShouldClose(window)) {
     glfwPollEvents();
     processInput(window);
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glActiveTexture(GL_TEXTURE0);
 
     float currentFrame = glfwGetTime();
     deltaTime = currentFrame - lastFrame;
@@ -113,6 +144,8 @@ int main() {
 
     shader.use();
     shader.setVec3("objectColor", 1.0f, 1.0f, 1.0f);
+    shader.setInt("textureDiffuse1", 0);
+    shader.setInt("textureSpecular1", 0);
 
     flashlight.position = camera.getPosition();
     flashlight.direction = camera.getDirection();
@@ -122,13 +155,28 @@ int main() {
     glm::mat4 projection = glm::perspective(glm::radians(camera.getFov()), static_cast<float>(WIDTH) / static_cast<float>(HEIGHT), 0.1f, 100.0f);
     glm::mat4 view = camera.getViewMatrix();
     glm::mat4 model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
-    model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
-    shader.setMat4("model", model);
     shader.setMat4("view", view);
     shader.setMat4("projection", projection);
     shader.setVec3("viewPosition", camera.getPosition());
-    gun.draw(shader);
+
+    glBindVertexArray(cubeVAO);
+    glBindTexture(GL_TEXTURE_2D, metal.getTexture());
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
+    shader.setMat4("model", model);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
+    shader.setMat4("model", model);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+    glBindVertexArray(0);
+
+    glBindVertexArray(planeVAO);
+    glBindTexture(GL_TEXTURE_2D, marble.getTexture());
+    model = glm::mat4(1.0f);
+    shader.setMat4("model", model);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindVertexArray(0);
 
     glfwSwapBuffers(window);
   }

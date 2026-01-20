@@ -48,21 +48,11 @@ uniform sampler2D textureDiffuse1;
 uniform sampler2D textureDiffuse2;
 uniform sampler2D textureDiffuse3;
 uniform sampler2D textureDiffuse4;
-uniform sampler2D textureDiffuse5;
-uniform sampler2D textureDiffuse6;
-uniform sampler2D textureDiffuse7;
-uniform sampler2D textureDiffuse8;
-uniform sampler2D textureDiffuse9;
 
 uniform sampler2D textureSpecular1;
 uniform sampler2D textureSpecular2;
 uniform sampler2D textureSpecular3;
 uniform sampler2D textureSpecular4;
-uniform sampler2D textureSpecular5;
-uniform sampler2D textureSpecular6;
-uniform sampler2D textureSpecular7;
-uniform sampler2D textureSpecular8;
-uniform sampler2D textureSpecular9;
 
 vec3 calcLightCoefficient(vec3 lightDirection, vec3 normal, vec3 viewDirection, vec3 lightAmbient, vec3 lightDiffuse, vec3 lightSpecular) {
   vec3 reflectDirection = reflect(-lightDirection, normal);
