@@ -1,3 +1,6 @@
+#include "ext/matrix_transform.hpp"
+#include "fwd.hpp"
+#include "types/Lighting.h"
 #define GLEW_STATIC
 #define STB_IMAGE_IMPLEMENTATION
 
@@ -10,12 +13,12 @@
 #include "Lighting/Lighting.h"
 #include "Lighting/presets/Flashlight.h"
 #include "Lighting/presets/GlobalLight.h"
-#include "Model/Model.h"
+#include "Lighting/presets/Lamp.h"
 #include "Shader/Shader.h"
 #include "Texture/Texture.h"
 #include "vertices.h"
 
-const char *TITLE = "Sandbox";
+const char *TITLE = "Engine";
 const int WIDTH = 900, HEIGHT = 600;
 std::string PROJECT_PATH = "/home/aminov/Documents/Programming/OpenGL/Engine";
 
@@ -64,8 +67,6 @@ void mouseCallback(GLFWwindow *window, double xpos, double ypos) {
 
 void scrollCallback(GLFWwindow *window, double xoffset, double yoffset) { camera.processMouseScroll(yoffset); }
 
-void framebufferSizeCallback(GLFWwindow *window, int width, int height) { glViewport(0, 0, width, height); }
-
 int main() {
   glfwInit();
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -81,7 +82,6 @@ int main() {
   glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
   glfwSetCursorPosCallback(window, mouseCallback);
   glfwSetScrollCallback(window, scrollCallback);
-  // glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
   glewExperimental = true;
   if (glewInit()) {
     std::cerr << "Failed to initialize GLEW.\n";
@@ -89,19 +89,29 @@ int main() {
   }
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LESS);
-  stbi_set_flip_vertically_on_load(true);
+  glEnable(GL_STENCIL_TEST);
+  glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+  glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
-  Shader shader(PROJECT_PATH + "/src/shaders/vertex.glsl", PROJECT_PATH + "/src/shaders/fragment.glsl");
-  Shader lightShader(PROJECT_PATH + "/src/shaders/light.vertex.glsl", PROJECT_PATH + "/src/shaders/light.fragment.glsl");
+  Shader baseShader(PROJECT_PATH + "/src/shaders/base.vertex.glsl", PROJECT_PATH + "/src/shaders/base.fragment.glsl");
+  Shader singleColorShader(PROJECT_PATH + "/src/shaders/singleColor.vertex.glsl", PROJECT_PATH + "/src/shaders/singleColor.fragment.glsl");
   Texture metal(PROJECT_PATH + "/resources/textures/metal.jpg");
   Texture marble(PROJECT_PATH + "/resources/textures/marble.jpg");
-
   Lighting lighting;
+
   Types::DirectionalLight globalLight = GLOBAL_LIGHT;
+  Types::PointLight lamp = LAMP;
   Types::SpotLight flashlight = FLASHLIGHT;
+  std::vector<glm::vec3> lamps{glm::vec3(1.5f, 1.5f, 1.5f)};
+  std::vector<glm::vec3> cubes{glm::vec3(-1.0f, 0.0f, -1.0f), glm::vec3(2.0f, 0.0f, 0.0f)};
+
   lighting.addDirectionalLight(globalLight);
   lighting.addSpotLight(flashlight);
-  lighting.uploadToShader(shader);
+  for (const glm::vec3 &lampPosition : lamps) {
+    lamp.position = lampPosition;
+    lighting.addPointLight(lamp);
+  }
+  lighting.uploadToShader(baseShader);
 
   unsigned cubeVAO, cubeVBO;
   glGenVertexArrays(1, &cubeVAO);
@@ -131,54 +141,93 @@ int main() {
   glEnableVertexAttribArray(2);
   glBindVertexArray(0);
 
+  unsigned singleColorCubeVAO;
+  glGenVertexArrays(1, &singleColorCubeVAO);
+  glBindVertexArray(singleColorCubeVAO);
+  glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
+  glVertexAttribPointer(0, 3, GL_FLOAT, false, 8 * sizeof(float), reinterpret_cast<void *>(0 * sizeof(float)));
+  glEnableVertexAttribArray(0);
+  glBindVertexArray(0);
+
   while (!glfwWindowShouldClose(window)) {
     glfwPollEvents();
     processInput(window);
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     glActiveTexture(GL_TEXTURE0);
 
     float currentFrame = glfwGetTime();
     deltaTime = currentFrame - lastFrame;
     lastFrame = currentFrame;
 
-    shader.use();
-    shader.setVec3("objectColor", 1.0f, 1.0f, 1.0f);
-    shader.setInt("textureDiffuse1", 0);
-    shader.setInt("textureSpecular1", 0);
-
+    baseShader.use();
     flashlight.position = camera.getPosition();
     flashlight.direction = camera.getDirection();
     lighting.changeSpotLight(0, flashlight);
-    lighting.uploadToShader(shader);
+    lighting.uploadToShader(baseShader);
 
     glm::mat4 projection = glm::perspective(glm::radians(camera.getFov()), static_cast<float>(WIDTH) / static_cast<float>(HEIGHT), 0.1f, 100.0f);
     glm::mat4 view = camera.getViewMatrix();
     glm::mat4 model = glm::mat4(1.0f);
-    shader.setMat4("view", view);
-    shader.setMat4("projection", projection);
-    shader.setVec3("viewPosition", camera.getPosition());
+    baseShader.setMat4("view", view);
+    baseShader.setMat4("projection", projection);
+    baseShader.setVec3("viewPosition", camera.getPosition());
 
-    glBindVertexArray(cubeVAO);
-    glBindTexture(GL_TEXTURE_2D, metal.getTexture());
-    model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
-    shader.setMat4("model", model);
-    glDrawArrays(GL_TRIANGLES, 0, 36);
-    model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
-    shader.setMat4("model", model);
-    glDrawArrays(GL_TRIANGLES, 0, 36);
-    glBindVertexArray(0);
-
+    glStencilMask(0x00);
     glBindVertexArray(planeVAO);
-    glBindTexture(GL_TEXTURE_2D, marble.getTexture());
-    model = glm::mat4(1.0f);
-    shader.setMat4("model", model);
+    glBindTexture(GL_TEXTURE_2D, metal.getTexture());
+    baseShader.setMat4("model", model);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
 
+    glStencilMask(0xFF);
+    glStencilFunc(GL_ALWAYS, 1, 0xFF);
+    glBindVertexArray(cubeVAO);
+    glBindTexture(GL_TEXTURE_2D, marble.getTexture());
+    for (const glm::vec3 &cubePosition : cubes) {
+      model = glm::mat4(1.0f);
+      model = glm::translate(model, glm::vec3(cubePosition));
+      baseShader.setMat4("model", model);
+      glDrawArrays(GL_TRIANGLES, 0, 36);
+    }
+    glBindVertexArray(0);
+
+    glStencilMask(0x00);
+    glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+    singleColorShader.use();
+    singleColorShader.setMat4("view", view);
+    singleColorShader.setMat4("projection", projection);
+    singleColorShader.setVec3("objectColor", 0.04f, 0.28f, 0.26f);
+    glBindVertexArray(singleColorCubeVAO);
+    glm::vec3 outlineScale(1.1f, 1.1f, 1.1f);
+    for (const glm::vec3 &cubePosition : cubes) {
+      model = glm::mat4(1.0f);
+      model = glm::translate(model, glm::vec3(cubePosition));
+      model = glm::scale(model, outlineScale);
+      singleColorShader.setMat4("model", model);
+      glDrawArrays(GL_TRIANGLES, 0, 36);
+    }
+    glBindVertexArray(0);
+    glStencilMask(0xFF);
+    glStencilFunc(GL_ALWAYS, 0, 0xFF);
+
+    singleColorShader.setVec3("objectColor", 1.0f, 1.0f, 1.0f);
+    glBindVertexArray(singleColorCubeVAO);
+    for (const glm::vec3 &lampPosition : lamps) {
+      model = glm::mat4(1.0f);
+      model = glm::translate(model, lampPosition);
+      model = glm::scale(model, glm::vec3(0.2f));
+      singleColorShader.setMat4("model", model);
+      glDrawArrays(GL_TRIANGLES, 0, 36);
+    }
+    glBindVertexArray(0);
     glfwSwapBuffers(window);
   }
+
+  glDeleteVertexArrays(1, &cubeVAO);
+  glDeleteVertexArrays(1, &planeVAO);
+  glDeleteVertexArrays(1, &singleColorCubeVAO);
+  glDeleteBuffers(1, &cubeVBO);
+  glDeleteBuffers(1, &planeVBO);
   glfwTerminate();
 }

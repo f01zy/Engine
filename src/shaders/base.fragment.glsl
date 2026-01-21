@@ -41,18 +41,9 @@ in vec2 vertexTextureCoordinates;
 uniform PointLight pointLights[POINT_LIGHTS];
 uniform SpotLight spotLights[SPOT_LIGHTS];
 uniform DirectionalLight directionalLight;
-uniform vec3 objectColor;
 uniform vec3 viewPosition;
-
 uniform sampler2D textureDiffuse1;
-uniform sampler2D textureDiffuse2;
-uniform sampler2D textureDiffuse3;
-uniform sampler2D textureDiffuse4;
-
 uniform sampler2D textureSpecular1;
-uniform sampler2D textureSpecular2;
-uniform sampler2D textureSpecular3;
-uniform sampler2D textureSpecular4;
 
 vec3 calcLightCoefficient(vec3 lightDirection, vec3 normal, vec3 viewDirection, vec3 lightAmbient, vec3 lightDiffuse, vec3 lightSpecular) {
   vec3 reflectDirection = reflect(-lightDirection, normal);
@@ -66,29 +57,29 @@ vec3 calcLightCoefficient(vec3 lightDirection, vec3 normal, vec3 viewDirection, 
 
 vec3 calcDirectionalLight(DirectionalLight light, vec3 normal, vec3 viewDirection) {
   vec3 lightDirection = normalize(-light.direction);
-  vec3 lightProperties = calcLightCoefficient(lightDirection, normal, viewDirection, light.ambient, light.diffuse, light.specular);
-  vec3 result = lightProperties * objectColor;
+  vec3 lightCoefficient = calcLightCoefficient(lightDirection, normal, viewDirection, light.ambient, light.diffuse, light.specular);
+  vec3 result = lightCoefficient;
   return result;
 }
 
 vec3 calcPointLight(PointLight light, vec3 normal, vec3 fragmentPosition, vec3 viewDirection) {
   vec3 lightDirection = normalize(light.position - fragmentPosition);
-  vec3 lightProperties = calcLightCoefficient(lightDirection, normal, viewDirection, light.ambient, light.diffuse, light.specular);
+  vec3 lightCoefficient = calcLightCoefficient(lightDirection, normal, viewDirection, light.ambient, light.diffuse, light.specular);
   float lightDistance = length(light.position - fragmentPosition);
   float attenuation = 1.0 / (light.constant + light.linear * lightDistance + light.quadratic * (lightDistance * lightDistance));
-  vec3 result = lightProperties * attenuation * objectColor;
+  vec3 result = lightCoefficient * attenuation;
   return result;
 }
 
 vec3 calcSpotLight(SpotLight light, vec3 normal, vec3 fragmentPosition, vec3 viewDirection) {
   vec3 lightDirection = normalize(light.position - fragmentPosition);
-  vec3 lightProperties = calcLightCoefficient(lightDirection, normal, viewDirection, light.ambient, light.diffuse, light.specular);
+  vec3 lightCoefficient = calcLightCoefficient(lightDirection, normal, viewDirection, light.ambient, light.diffuse, light.specular);
   float lightDistance = length(light.position - fragmentPosition);
   float attenuation = 1.0 / (light.constant + light.linear * lightDistance + light.quadratic * (lightDistance * lightDistance));
   float theta = dot(lightDirection, normalize(-light.direction));
   float epsilon = light.cutOff - light.outerCutOff;
   float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0f, 1.0f);
-  vec3 result = lightProperties * attenuation * intensity * objectColor;
+  vec3 result = lightCoefficient * attenuation * intensity;
   return result;
 }
 
@@ -97,7 +88,7 @@ void main() {
   vec3 viewDirection = normalize(viewPosition - fragmentPosition);
   vec3 result = calcDirectionalLight(directionalLight, normal, viewDirection);
   for (int i = 0; i < POINT_LIGHTS; i++) {
-    // result += calcPointLight(pointLights[i], normal, fragmentPosition, viewDirection);
+    result += calcPointLight(pointLights[i], normal, fragmentPosition, viewDirection);
   }
   for (int i = 0; i < SPOT_LIGHTS; i++) {
     result += calcSpotLight(spotLights[i], normal, fragmentPosition, viewDirection);
