@@ -10,15 +10,16 @@ void Camera::processKeyboard(GLFWwindow *window, float deltaTime, Direction move
 
   if (movementDirection == Direction::FORWARD) {
     position += direction * velocity;
-  }
-  if (movementDirection == Direction::BACK) {
+  } else if (movementDirection == Direction::BACK) {
     position -= direction * velocity;
-  }
-  if (movementDirection == Direction::LEFT) {
+  } else if (movementDirection == Direction::LEFT) {
     position -= right * velocity;
-  }
-  if (movementDirection == Direction::RIGHT) {
+  } else if (movementDirection == Direction::RIGHT) {
     position += right * velocity;
+  } else if (movementDirection == Direction::UP) {
+    position += up * velocity;
+  } else if (movementDirection == Direction::DOWN) {
+    position -= up * velocity;
   }
 }
 

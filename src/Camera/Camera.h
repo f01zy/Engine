@@ -12,7 +12,7 @@ const float FOV = 45.0f;
 const float SENSITIVITY = 0.05f;
 const float SPEED = 4.0f;
 
-enum Direction { FORWARD, BACK, LEFT, RIGHT };
+enum Direction { FORWARD, BACK, LEFT, RIGHT, UP, DOWN };
 
 class Camera final {
 public:

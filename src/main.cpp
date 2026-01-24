@@ -48,6 +48,12 @@ void processInput(GLFWwindow *window) {
   if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
     camera.processKeyboard(window, deltaTime, Direction::RIGHT);
   }
+  if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+    camera.processKeyboard(window, deltaTime, Direction::UP);
+  }
+  if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
+    camera.processKeyboard(window, deltaTime, Direction::DOWN);
+  }
 }
 
 void mouseCallback(GLFWwindow *window, double xpos, double ypos) {
@@ -90,8 +96,6 @@ int main() {
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LESS);
   glEnable(GL_STENCIL_TEST);
-  glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-  glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
   Shader baseShader(PROJECT_PATH + "/src/shaders/base.vertex.glsl", PROJECT_PATH + "/src/shaders/base.fragment.glsl");
   Shader singleColorShader(PROJECT_PATH + "/src/shaders/singleColor.vertex.glsl", PROJECT_PATH + "/src/shaders/singleColor.fragment.glsl");
@@ -150,11 +154,12 @@ int main() {
   glBindVertexArray(0);
 
   while (!glfwWindowShouldClose(window)) {
-    glfwPollEvents();
-    processInput(window);
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    glStencilFunc(GL_ALWAYS, 1, 0xFF);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
     glActiveTexture(GL_TEXTURE0);
+    processInput(window);
 
     float currentFrame = glfwGetTime();
     deltaTime = currentFrame - lastFrame;
@@ -181,7 +186,6 @@ int main() {
     glBindVertexArray(0);
 
     glStencilMask(0xFF);
-    glStencilFunc(GL_ALWAYS, 1, 0xFF);
     glBindVertexArray(cubeVAO);
     glBindTexture(GL_TEXTURE_2D, marble.getTexture());
     for (const glm::vec3 &cubePosition : cubes) {
@@ -194,6 +198,7 @@ int main() {
 
     glStencilMask(0x00);
     glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+    glDisable(GL_DEPTH_TEST);
     singleColorShader.use();
     singleColorShader.setMat4("view", view);
     singleColorShader.setMat4("projection", projection);
@@ -210,6 +215,7 @@ int main() {
     glBindVertexArray(0);
     glStencilMask(0xFF);
     glStencilFunc(GL_ALWAYS, 0, 0xFF);
+    glEnable(GL_DEPTH_TEST);
 
     singleColorShader.setVec3("objectColor", 1.0f, 1.0f, 1.0f);
     glBindVertexArray(singleColorCubeVAO);
@@ -221,6 +227,8 @@ int main() {
       glDrawArrays(GL_TRIANGLES, 0, 36);
     }
     glBindVertexArray(0);
+
+    glfwPollEvents();
     glfwSwapBuffers(window);
   }
 
