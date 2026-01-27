@@ -1,12 +1,10 @@
-#include "ext/matrix_transform.hpp"
-#include "geometric.hpp"
-#include <map>
 #define GLEW_STATIC
 #define STB_IMAGE_IMPLEMENTATION
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
+#include <map>
 #include <string>
 
 #include "Camera/Camera.h"
@@ -100,6 +98,8 @@ int main() {
   glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glCullFace(GL_BACK);
+  glFrontFace(GL_CW);
 
   Shader baseShader(PROJECT_PATH + "/src/shaders/base.vertex.glsl", PROJECT_PATH + "/src/shaders/base.fragment.glsl");
   Shader singleColorShader(PROJECT_PATH + "/src/shaders/singleColor.vertex.glsl", PROJECT_PATH + "/src/shaders/singleColor.fragment.glsl");
@@ -196,6 +196,8 @@ int main() {
     baseShader.setMat4("projection", projection);
     baseShader.setVec3("viewPosition", camera.getPosition());
 
+    glEnable(GL_CULL_FACE);
+
     glStencilMask(0x00);
     glBindVertexArray(planeVAO);
     glBindTexture(GL_TEXTURE_2D, metalTexture.getTexture());
@@ -252,6 +254,8 @@ int main() {
       float distance = glm::length(camera.getPosition() - windowPosition);
       sortedTransparentWindows[distance] = windowPosition;
     }
+
+    glDisable(GL_CULL_FACE);
 
     transparentShader.use();
     transparentShader.setMat4("view", view);

@@ -17,9 +17,9 @@ void Camera::processKeyboard(GLFWwindow *window, float deltaTime, Direction move
   } else if (movementDirection == Direction::RIGHT) {
     position += right * velocity;
   } else if (movementDirection == Direction::UP) {
-    position += up * velocity;
+    position += worldUp * velocity;
   } else if (movementDirection == Direction::DOWN) {
-    position -= up * velocity;
+    position -= worldUp * velocity;
   }
 }
 
