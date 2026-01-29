@@ -1,10 +1,11 @@
+#include "ext/matrix_transform.hpp"
+#include "trigonometric.hpp"
 #define GLEW_STATIC
 #define STB_IMAGE_IMPLEMENTATION
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
-#include <map>
 #include <string>
 
 #include "Camera/Camera.h"
@@ -93,9 +94,6 @@ int main() {
   }
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LESS);
-  glEnable(GL_STENCIL_TEST);
-  glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-  glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glCullFace(GL_BACK);
@@ -103,7 +101,6 @@ int main() {
 
   Shader baseShader(PROJECT_PATH + "/src/shaders/base.vertex.glsl", PROJECT_PATH + "/src/shaders/base.fragment.glsl");
   Shader singleColorShader(PROJECT_PATH + "/src/shaders/singleColor.vertex.glsl", PROJECT_PATH + "/src/shaders/singleColor.fragment.glsl");
-  Shader transparentShader(PROJECT_PATH + "/src/shaders/transparent.vertex.glsl", PROJECT_PATH + "/src/shaders/transparent.fragment.glsl");
   Shader screenShader(PROJECT_PATH + "/src/shaders/screen.vertex.glsl", PROJECT_PATH + "/src/shaders/screen.fragment.glsl");
   Texture metalTexture(PROJECT_PATH + "/resources/textures/metal.jpg");
   Texture marbleTexture(PROJECT_PATH + "/resources/textures/marble.jpg");
@@ -115,8 +112,6 @@ int main() {
   Types::SpotLight flashlight = FLASHLIGHT;
   std::vector<glm::vec3> lamps{glm::vec3(1.5f, 1.5f, 1.5f)};
   std::vector<glm::vec3> cubes{glm::vec3(-1.0f, 0.0f, -1.0f), glm::vec3(2.0f, 0.0f, 0.0f)};
-  std::vector<glm::vec3> windows{glm::vec3(-1.5f, 0.0f, -0.48f), glm::vec3(1.5f, 0.0f, 0.51f), glm::vec3(0.0f, 0.0f, 0.7f), glm::vec3(-0.3f, 0.0f, -2.3f),
-                                 glm::vec3(0.5f, 0.0f, -0.6f)};
 
   lighting.addDirectionalLight(globalLight);
   lighting.addSpotLight(flashlight);
@@ -162,18 +157,6 @@ int main() {
   glEnableVertexAttribArray(0);
   glBindVertexArray(0);
 
-  unsigned transparentVAO, transparentVBO;
-  glGenVertexArrays(1, &transparentVAO);
-  glGenBuffers(1, &transparentVBO);
-  glBindVertexArray(transparentVAO);
-  glBindBuffer(GL_ARRAY_BUFFER, transparentVBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(TRANSPARENT_VERTICES), TRANSPARENT_VERTICES, GL_STATIC_DRAW);
-  glVertexAttribPointer(0, 3, GL_FLOAT, false, 5 * sizeof(float), reinterpret_cast<void *>(0 * sizeof(float)));
-  glEnableVertexAttribArray(0);
-  glVertexAttribPointer(1, 2, GL_FLOAT, false, 5 * sizeof(float), reinterpret_cast<void *>(3 * sizeof(float)));
-  glEnableVertexAttribArray(1);
-  glBindVertexArray(0);
-
   unsigned screenVAO, screenVBO;
   glGenVertexArrays(1, &screenVAO);
   glGenBuffers(1, &screenVBO);
@@ -211,19 +194,18 @@ int main() {
 
     glBindFramebuffer(GL_FRAMEBUFFER, FBO);
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
     float currentFrame = glfwGetTime();
     deltaTime = currentFrame - lastFrame;
     lastFrame = currentFrame;
-
     baseShader.use();
     flashlight.position = camera.getPosition();
     flashlight.direction = camera.getDirection();
     lighting.changeSpotLight(0, flashlight);
     lighting.uploadToShader(baseShader);
-
     glm::mat4 projection = glm::perspective(glm::radians(camera.getFov()), static_cast<float>(WIDTH) / static_cast<float>(HEIGHT), 0.1f, 100.0f);
     glm::mat4 view = camera.getViewMatrix();
     glm::mat4 model = glm::mat4(1.0f);
@@ -231,16 +213,12 @@ int main() {
     baseShader.setMat4("projection", projection);
     baseShader.setVec3("viewPosition", camera.getPosition());
 
-    glEnable(GL_CULL_FACE);
-    glStencilMask(0x00);
     glBindVertexArray(planeVAO);
     glBindTexture(GL_TEXTURE_2D, metalTexture.getTexture());
     baseShader.setMat4("model", model);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
 
-    glStencilMask(0xFF);
-    glStencilFunc(GL_ALWAYS, 1, 0xFF);
     glBindVertexArray(cubeVAO);
     glBindTexture(GL_TEXTURE_2D, marbleTexture.getTexture());
     for (const glm::vec3 &cubePosition : cubes) {
@@ -251,27 +229,9 @@ int main() {
     }
     glBindVertexArray(0);
 
-    glStencilMask(0x00);
-    glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-    glDisable(GL_DEPTH_TEST);
     singleColorShader.use();
     singleColorShader.setMat4("view", view);
     singleColorShader.setMat4("projection", projection);
-    singleColorShader.setVec3("objectColor", 0.04f, 0.28f, 0.26f);
-    glBindVertexArray(singleColorCubeVAO);
-    glm::vec3 outlineScale(1.1f, 1.1f, 1.1f);
-    for (const glm::vec3 &cubePosition : cubes) {
-      model = glm::mat4(1.0f);
-      model = glm::translate(model, glm::vec3(cubePosition));
-      model = glm::scale(model, outlineScale);
-      singleColorShader.setMat4("model", model);
-      glDrawArrays(GL_TRIANGLES, 0, 36);
-    }
-    glBindVertexArray(0);
-    glStencilMask(0xFF);
-    glStencilFunc(GL_ALWAYS, 0, 0xFF);
-    glEnable(GL_DEPTH_TEST);
-
     singleColorShader.setVec3("objectColor", 1.0f, 1.0f, 1.0f);
     glBindVertexArray(singleColorCubeVAO);
     for (const glm::vec3 &lampPosition : lamps) {
@@ -301,11 +261,9 @@ int main() {
   glDeleteVertexArrays(1, &cubeVAO);
   glDeleteVertexArrays(1, &planeVAO);
   glDeleteVertexArrays(1, &singleColorCubeVAO);
-  glDeleteVertexArrays(1, &transparentVAO);
   glDeleteVertexArrays(1, &screenVAO);
   glDeleteBuffers(1, &cubeVBO);
   glDeleteBuffers(1, &planeVBO);
-  glDeleteBuffers(1, &transparentVBO);
   glDeleteBuffers(1, &screenVBO);
   glDeleteBuffers(1, &FBO);
   glfwTerminate();
