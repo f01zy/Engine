@@ -104,6 +104,7 @@ int main() {
   Shader baseShader(PROJECT_PATH + "/src/shaders/base.vertex.glsl", PROJECT_PATH + "/src/shaders/base.fragment.glsl");
   Shader singleColorShader(PROJECT_PATH + "/src/shaders/singleColor.vertex.glsl", PROJECT_PATH + "/src/shaders/singleColor.fragment.glsl");
   Shader transparentShader(PROJECT_PATH + "/src/shaders/transparent.vertex.glsl", PROJECT_PATH + "/src/shaders/transparent.fragment.glsl");
+  Shader screenShader(PROJECT_PATH + "/src/shaders/screen.vertex.glsl", PROJECT_PATH + "/src/shaders/screen.fragment.glsl");
   Texture metalTexture(PROJECT_PATH + "/resources/textures/metal.jpg");
   Texture marbleTexture(PROJECT_PATH + "/resources/textures/marble.jpg");
   Texture windowTexture(PROJECT_PATH + "/resources/textures/window.png");
@@ -173,11 +174,45 @@ int main() {
   glEnableVertexAttribArray(1);
   glBindVertexArray(0);
 
+  unsigned screenVAO, screenVBO;
+  glGenVertexArrays(1, &screenVAO);
+  glGenBuffers(1, &screenVBO);
+  glBindVertexArray(screenVAO);
+  glBindBuffer(GL_ARRAY_BUFFER, screenVBO);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(QUAD_VERTICES), QUAD_VERTICES, GL_STATIC_DRAW);
+  glVertexAttribPointer(0, 2, GL_FLOAT, false, 4 * sizeof(float), reinterpret_cast<void *>(0 * sizeof(float)));
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(1, 2, GL_FLOAT, false, 4 * sizeof(float), reinterpret_cast<void *>(2 * sizeof(float)));
+  glEnableVertexAttribArray(1);
+  glBindVertexArray(0);
+
+  unsigned FBO;
+  glGenFramebuffers(1, &FBO);
+  glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+  unsigned screenTexture;
+  glGenTextures(1, &screenTexture);
+  glBindTexture(GL_TEXTURE_2D, screenTexture);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WIDTH, HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, screenTexture, 0);
+  unsigned RBO;
+  glGenRenderbuffers(1, &RBO);
+  glBindRenderbuffer(GL_RENDERBUFFER, RBO);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, WIDTH, HEIGHT);
+  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, RBO);
+  if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+    std::cout << "Framebuffer is not complete!\n";
+  }
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
   while (!glfwWindowShouldClose(window)) {
     processInput(window);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+    glEnable(GL_DEPTH_TEST);
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-    glActiveTexture(GL_TEXTURE0);
 
     float currentFrame = glfwGetTime();
     deltaTime = currentFrame - lastFrame;
@@ -197,7 +232,6 @@ int main() {
     baseShader.setVec3("viewPosition", camera.getPosition());
 
     glEnable(GL_CULL_FACE);
-
     glStencilMask(0x00);
     glBindVertexArray(planeVAO);
     glBindTexture(GL_TEXTURE_2D, metalTexture.getTexture());
@@ -249,25 +283,15 @@ int main() {
     }
     glBindVertexArray(0);
 
-    std::map<float, glm::vec3> sortedTransparentWindows;
-    for (const glm::vec3 &windowPosition : windows) {
-      float distance = glm::length(camera.getPosition() - windowPosition);
-      sortedTransparentWindows[distance] = windowPosition;
-    }
-
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
-
-    transparentShader.use();
-    transparentShader.setMat4("view", view);
-    transparentShader.setMat4("projection", projection);
-    glBindVertexArray(transparentVAO);
-    glBindTexture(GL_TEXTURE_2D, windowTexture.getTexture());
-    for (std::map<float, glm::vec3>::reverse_iterator it = sortedTransparentWindows.rbegin(); it != sortedTransparentWindows.rend(); it++) {
-      model = glm::mat4(1.0f);
-      model = glm::translate(model, it->second);
-      transparentShader.setMat4("model", model);
-      glDrawArrays(GL_TRIANGLES, 0, 6);
-    }
+    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+    screenShader.use();
+    glBindTexture(GL_TEXTURE_2D, screenTexture);
+    glBindVertexArray(screenVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
 
     glfwPollEvents();
@@ -278,8 +302,11 @@ int main() {
   glDeleteVertexArrays(1, &planeVAO);
   glDeleteVertexArrays(1, &singleColorCubeVAO);
   glDeleteVertexArrays(1, &transparentVAO);
+  glDeleteVertexArrays(1, &screenVAO);
   glDeleteBuffers(1, &cubeVBO);
   glDeleteBuffers(1, &planeVBO);
   glDeleteBuffers(1, &transparentVBO);
+  glDeleteBuffers(1, &screenVBO);
+  glDeleteBuffers(1, &FBO);
   glfwTerminate();
 }
