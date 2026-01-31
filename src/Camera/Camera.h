@@ -10,9 +10,10 @@ const float YAW = -90.0f;
 const float PITCH = 0.0f;
 const float FOV = 45.0f;
 const float SENSITIVITY = 0.05f;
-const float SPEED = 4.0f;
+const float ACCELERATION = 0.015f;
+const float MAX_SPEED = 0.6f;
 
-enum Direction { FORWARD, BACK, LEFT, RIGHT, UP, DOWN };
+enum Direction { FORWARD, BACK, LEFT, RIGHT, UP, DOWN, NONE };
 
 class Camera final {
 public:
@@ -24,6 +25,7 @@ public:
   glm::mat4 getViewMatrix();
   float getFov();
 
+  void processMovement();
   void processKeyboard(GLFWwindow *window, float deltaTime, Direction movementDirection);
   void processMouseMovement(float xoffset, float yoffset);
   void processMouseScroll(float yoffset);
@@ -36,9 +38,11 @@ private:
   glm::vec3 right;
   glm::vec3 worldUp;
   glm::vec3 up;
+  glm::vec3 velocity;
 
+  float acceleration = ACCELERATION;
+  float maxSpeed = MAX_SPEED;
   float sensitivity = SENSITIVITY;
-  float speed = SPEED;
   float yaw = YAW;
   float pitch = PITCH;
   float fov = FOV;

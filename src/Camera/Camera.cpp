@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include "Camera.h"
 
 Camera::Camera(glm::vec3 &position, glm::vec3 &direction) : position(position), direction(direction) {
@@ -6,21 +8,30 @@ Camera::Camera(glm::vec3 &position, glm::vec3 &direction) : position(position), 
 }
 
 void Camera::processKeyboard(GLFWwindow *window, float deltaTime, Direction movementDirection) {
-  float velocity = speed * deltaTime;
-
-  if (movementDirection == Direction::FORWARD) {
-    position += direction * velocity;
-  } else if (movementDirection == Direction::BACK) {
-    position -= direction * velocity;
-  } else if (movementDirection == Direction::LEFT) {
-    position -= right * velocity;
-  } else if (movementDirection == Direction::RIGHT) {
-    position += right * velocity;
-  } else if (movementDirection == Direction::UP) {
-    position += worldUp * velocity;
-  } else if (movementDirection == Direction::DOWN) {
-    position -= worldUp * velocity;
+  if (movementDirection == Direction::NONE) {
+    float currentSpeed = glm::length(velocity);
+    if (currentSpeed != 0) {
+      float newSpeed = std::max(0.0f, currentSpeed - acceleration);
+      velocity = glm::normalize(velocity) * newSpeed;
+    }
   }
+  if (glm::length(velocity) > maxSpeed) {
+    velocity = glm::normalize(velocity) * maxSpeed;
+  }
+  if (movementDirection == Direction::FORWARD) {
+    velocity += direction * acceleration;
+  } else if (movementDirection == Direction::BACK) {
+    velocity -= direction * acceleration;
+  } else if (movementDirection == Direction::LEFT) {
+    velocity -= right * acceleration;
+  } else if (movementDirection == Direction::RIGHT) {
+    velocity += right * acceleration;
+  } else if (movementDirection == Direction::UP) {
+    velocity += worldUp * acceleration;
+  } else if (movementDirection == Direction::DOWN) {
+    velocity -= worldUp * acceleration;
+  }
+  position += velocity;
 }
 
 void Camera::processMouseMovement(float xoffset, float yoffset) {
@@ -28,14 +39,7 @@ void Camera::processMouseMovement(float xoffset, float yoffset) {
   yoffset *= SENSITIVITY;
   yaw += xoffset;
   pitch += yoffset;
-
-  if (pitch > 89.0f) {
-    pitch = 89.0f;
-  }
-  if (pitch < -89.0f) {
-    pitch = -89.0f;
-  }
-
+  pitch = std::clamp(pitch, -89.0f, 89.0f);
   updateDirection();
 }
 
@@ -43,12 +47,7 @@ void Camera::processMouseScroll(float yoffset) {
   if (fov >= 1.0f && fov <= 45.0f) {
     fov -= yoffset;
   }
-  if (fov < 1.0f) {
-    fov = 1.0f;
-  }
-  if (fov > 45.0f) {
-    fov = 45.0f;
-  }
+  fov = std::clamp(fov, 1.0f, 45.0f);
 }
 
 void Camera::updateDirection() {

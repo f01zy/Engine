@@ -1,5 +1,4 @@
-#include "ext/matrix_transform.hpp"
-#include "trigonometric.hpp"
+#include <unordered_map>
 #define GLEW_STATIC
 #define STB_IMAGE_IMPLEMENTATION
 
@@ -31,27 +30,24 @@ glm::vec3 position(0.0f, 0.0f, 3.0f);
 glm::vec3 direction(0.0f, 0.0f, -1.0f);
 Camera camera(position, direction);
 
+std::unordered_map<int, Direction> movements{
+    {GLFW_KEY_W, Direction::FORWARD}, {GLFW_KEY_S, Direction::BACK},   {GLFW_KEY_A, Direction::LEFT},
+    {GLFW_KEY_D, Direction::RIGHT},   {GLFW_KEY_SPACE, Direction::UP}, {GLFW_KEY_LEFT_SHIFT, Direction::DOWN},
+};
+
 void processInput(GLFWwindow *window) {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, true);
   }
-  if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-    camera.processKeyboard(window, deltaTime, Direction::FORWARD);
+  bool isMoved = false;
+  for (const auto &i : movements) {
+    if (glfwGetKey(window, i.first) == GLFW_PRESS) {
+      camera.processKeyboard(window, deltaTime, i.second);
+      isMoved = true;
+    }
   }
-  if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-    camera.processKeyboard(window, deltaTime, Direction::BACK);
-  }
-  if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-    camera.processKeyboard(window, deltaTime, Direction::LEFT);
-  }
-  if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-    camera.processKeyboard(window, deltaTime, Direction::RIGHT);
-  }
-  if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
-    camera.processKeyboard(window, deltaTime, Direction::UP);
-  }
-  if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
-    camera.processKeyboard(window, deltaTime, Direction::DOWN);
+  if (!isMoved) {
+    camera.processKeyboard(window, deltaTime, Direction::NONE);
   }
 }
 
@@ -93,9 +89,6 @@ int main() {
     return -1;
   }
   glEnable(GL_DEPTH_TEST);
-  glDepthFunc(GL_LESS);
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glCullFace(GL_BACK);
   glFrontFace(GL_CW);
 
@@ -104,7 +97,6 @@ int main() {
   Shader screenShader(PROJECT_PATH + "/src/shaders/screen.vertex.glsl", PROJECT_PATH + "/src/shaders/screen.fragment.glsl");
   Texture metalTexture(PROJECT_PATH + "/resources/textures/metal.jpg");
   Texture marbleTexture(PROJECT_PATH + "/resources/textures/marble.jpg");
-  Texture windowTexture(PROJECT_PATH + "/resources/textures/window.png");
   Lighting lighting;
 
   Types::DirectionalLight globalLight = GLOBAL_LIGHT;
@@ -113,12 +105,12 @@ int main() {
   std::vector<glm::vec3> lamps{glm::vec3(1.5f, 1.5f, 1.5f)};
   std::vector<glm::vec3> cubes{glm::vec3(-1.0f, 0.0f, -1.0f), glm::vec3(2.0f, 0.0f, 0.0f)};
 
-  lighting.addDirectionalLight(globalLight);
-  lighting.addSpotLight(flashlight);
   for (const glm::vec3 &lampPosition : lamps) {
     lamp.position = lampPosition;
     lighting.addPointLight(lamp);
   }
+  lighting.addDirectionalLight(globalLight);
+  lighting.addSpotLight(flashlight);
   lighting.uploadToShader(baseShader);
 
   unsigned cubeVAO, cubeVBO;
@@ -201,26 +193,28 @@ int main() {
     float currentFrame = glfwGetTime();
     deltaTime = currentFrame - lastFrame;
     lastFrame = currentFrame;
+
     baseShader.use();
     flashlight.position = camera.getPosition();
     flashlight.direction = camera.getDirection();
     lighting.changeSpotLight(0, flashlight);
     lighting.uploadToShader(baseShader);
+
     glm::mat4 projection = glm::perspective(glm::radians(camera.getFov()), static_cast<float>(WIDTH) / static_cast<float>(HEIGHT), 0.1f, 100.0f);
     glm::mat4 view = camera.getViewMatrix();
     glm::mat4 model = glm::mat4(1.0f);
     baseShader.setMat4("view", view);
     baseShader.setMat4("projection", projection);
     baseShader.setVec3("viewPosition", camera.getPosition());
-
-    glBindVertexArray(planeVAO);
-    glBindTexture(GL_TEXTURE_2D, metalTexture.getTexture());
     baseShader.setMat4("model", model);
+
+    glBindTexture(GL_TEXTURE_2D, metalTexture.getTexture());
+    glBindVertexArray(planeVAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
 
-    glBindVertexArray(cubeVAO);
     glBindTexture(GL_TEXTURE_2D, marbleTexture.getTexture());
+    glBindVertexArray(cubeVAO);
     for (const glm::vec3 &cubePosition : cubes) {
       model = glm::mat4(1.0f);
       model = glm::translate(model, glm::vec3(cubePosition));
