@@ -1,7 +1,6 @@
 #include <algorithm>
 
 #include "Camera.h"
-#include "ext/quaternion_geometric.hpp"
 
 Camera::Camera(glm::vec3 &position, glm::vec3 &direction) : position(position), direction(direction) {
   worldUp = glm::vec3(0.0f, 1.0f, 0.0f);
@@ -19,6 +18,10 @@ void Camera::processKeyboard(GLFWwindow *window, float deltaTime, std::vector<Di
       movementDirectionVector += right;
     } else if (movementDirection == Direction::LEFT) {
       movementDirectionVector -= right;
+    } else if (movementDirection == Direction::UP) {
+      movementDirectionVector += worldUp;
+    } else if (movementDirection == Direction::DOWN) {
+      movementDirectionVector -= worldUp;
     }
   }
   if (glm::length(movementDirectionVector) == 0) {

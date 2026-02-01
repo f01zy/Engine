@@ -31,10 +31,8 @@ glm::vec3 direction(0.0f, 0.0f, -1.0f);
 Camera camera(position, direction);
 
 std::unordered_map<int, Direction> movements{
-    {GLFW_KEY_W, Direction::FORWARD},
-    {GLFW_KEY_S, Direction::BACK},
-    {GLFW_KEY_A, Direction::LEFT},
-    {GLFW_KEY_D, Direction::RIGHT},
+    {GLFW_KEY_W, Direction::FORWARD}, {GLFW_KEY_S, Direction::BACK},   {GLFW_KEY_A, Direction::LEFT},
+    {GLFW_KEY_D, Direction::RIGHT},   {GLFW_KEY_SPACE, Direction::UP}, {GLFW_KEY_LEFT_SHIFT, Direction::DOWN},
 };
 
 void processInput(GLFWwindow *window) {
