@@ -1,35 +1,37 @@
 #include <algorithm>
 
 #include "Camera.h"
+#include "ext/quaternion_geometric.hpp"
 
 Camera::Camera(glm::vec3 &position, glm::vec3 &direction) : position(position), direction(direction) {
   worldUp = glm::vec3(0.0f, 1.0f, 0.0f);
   updateDirection();
 }
 
-void Camera::processKeyboard(GLFWwindow *window, float deltaTime, Direction movementDirection) {
-  if (movementDirection == Direction::NONE) {
-    float currentSpeed = glm::length(velocity);
-    if (currentSpeed != 0) {
-      float newSpeed = std::max(0.0f, currentSpeed - acceleration);
-      velocity = glm::normalize(velocity) * newSpeed;
+void Camera::processKeyboard(GLFWwindow *window, float deltaTime, std::vector<Direction> movementDirections) {
+  glm::vec3 movementDirectionVector(0.0f);
+  for (const Direction &movementDirection : movementDirections) {
+    if (movementDirection == Direction::FORWARD) {
+      movementDirectionVector += direction;
+    } else if (movementDirection == Direction::BACK) {
+      movementDirectionVector -= direction;
+    } else if (movementDirection == Direction::RIGHT) {
+      movementDirectionVector += right;
+    } else if (movementDirection == Direction::LEFT) {
+      movementDirectionVector -= right;
     }
   }
+  if (glm::length(movementDirectionVector) == 0) {
+    float currentSpeed = glm::length(velocity);
+    if (currentSpeed != 0) {
+      float newSpeed = std::max(0.0f, currentSpeed - stoppingAcceleration * deltaTime);
+      velocity = glm::normalize(velocity) * newSpeed;
+    }
+    return;
+  }
+  velocity += glm::normalize(movementDirectionVector) * acceleration * deltaTime;
   if (glm::length(velocity) > maxSpeed) {
     velocity = glm::normalize(velocity) * maxSpeed;
-  }
-  if (movementDirection == Direction::FORWARD) {
-    velocity += direction * acceleration;
-  } else if (movementDirection == Direction::BACK) {
-    velocity -= direction * acceleration;
-  } else if (movementDirection == Direction::LEFT) {
-    velocity -= right * acceleration;
-  } else if (movementDirection == Direction::RIGHT) {
-    velocity += right * acceleration;
-  } else if (movementDirection == Direction::UP) {
-    velocity += worldUp * acceleration;
-  } else if (movementDirection == Direction::DOWN) {
-    velocity -= worldUp * acceleration;
   }
   position += velocity;
 }

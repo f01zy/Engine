@@ -31,23 +31,26 @@ glm::vec3 direction(0.0f, 0.0f, -1.0f);
 Camera camera(position, direction);
 
 std::unordered_map<int, Direction> movements{
-    {GLFW_KEY_W, Direction::FORWARD}, {GLFW_KEY_S, Direction::BACK},   {GLFW_KEY_A, Direction::LEFT},
-    {GLFW_KEY_D, Direction::RIGHT},   {GLFW_KEY_SPACE, Direction::UP}, {GLFW_KEY_LEFT_SHIFT, Direction::DOWN},
+    {GLFW_KEY_W, Direction::FORWARD},
+    {GLFW_KEY_S, Direction::BACK},
+    {GLFW_KEY_A, Direction::LEFT},
+    {GLFW_KEY_D, Direction::RIGHT},
 };
 
 void processInput(GLFWwindow *window) {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, true);
   }
-  bool isMoved = false;
+  std::vector<Direction> directions;
   for (const auto &i : movements) {
     if (glfwGetKey(window, i.first) == GLFW_PRESS) {
-      camera.processKeyboard(window, deltaTime, i.second);
-      isMoved = true;
+      directions.push_back(i.second);
     }
   }
-  if (!isMoved) {
-    camera.processKeyboard(window, deltaTime, Direction::NONE);
+  if (directions.empty()) {
+    camera.processKeyboard(window, deltaTime, {});
+  } else {
+    camera.processKeyboard(window, deltaTime, directions);
   }
 }
 
@@ -182,8 +185,6 @@ int main() {
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
   while (!glfwWindowShouldClose(window)) {
-    processInput(window);
-
     glBindFramebuffer(GL_FRAMEBUFFER, FBO);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
@@ -193,6 +194,7 @@ int main() {
     float currentFrame = glfwGetTime();
     deltaTime = currentFrame - lastFrame;
     lastFrame = currentFrame;
+    processInput(window);
 
     baseShader.use();
     flashlight.position = camera.getPosition();
