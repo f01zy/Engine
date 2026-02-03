@@ -1,4 +1,3 @@
-#include <unordered_map>
 #define GLEW_STATIC
 #define STB_IMAGE_IMPLEMENTATION
 
@@ -6,6 +5,7 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <string>
+#include <unordered_map>
 
 #include "Camera/Camera.h"
 #include "Lighting/Lighting.h"
@@ -96,8 +96,13 @@ int main() {
   Shader baseShader(PROJECT_PATH + "/src/shaders/base.vertex.glsl", PROJECT_PATH + "/src/shaders/base.fragment.glsl");
   Shader singleColorShader(PROJECT_PATH + "/src/shaders/singleColor.vertex.glsl", PROJECT_PATH + "/src/shaders/singleColor.fragment.glsl");
   Shader screenShader(PROJECT_PATH + "/src/shaders/screen.vertex.glsl", PROJECT_PATH + "/src/shaders/screen.fragment.glsl");
+  Shader skyboxShader(PROJECT_PATH + "/src/shaders/skybox.vertex.glsl", PROJECT_PATH + "/src/shaders/skybox.fragment.glsl");
   Texture metalTexture(PROJECT_PATH + "/resources/textures/metal.jpg");
   Texture marbleTexture(PROJECT_PATH + "/resources/textures/marble.jpg");
+  std::vector<std::string> faces{PROJECT_PATH + "/resources/textures/skybox/right.jpg", PROJECT_PATH + "/resources/textures/skybox/left.jpg",
+                                 PROJECT_PATH + "/resources/textures/skybox/top.jpg",   PROJECT_PATH + "/resources/textures/skybox/bottom.jpg",
+                                 PROJECT_PATH + "/resources/textures/skybox/front.jpg", PROJECT_PATH + "/resources/textures/skybox/back.jpg"};
+  Texture skybox(faces);
   Lighting lighting;
 
   Types::DirectionalLight globalLight = GLOBAL_LIGHT;
@@ -113,6 +118,16 @@ int main() {
   lighting.addDirectionalLight(globalLight);
   lighting.addSpotLight(flashlight);
   lighting.uploadToShader(baseShader);
+
+  unsigned skyboxVAO, skyboxVBO;
+  glGenVertexArrays(1, &skyboxVAO);
+  glGenBuffers(1, &skyboxVBO);
+  glBindVertexArray(skyboxVAO);
+  glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(SKYBOX_VERTICES), SKYBOX_VERTICES, GL_STATIC_DRAW);
+  glVertexAttribPointer(0, 3, GL_FLOAT, false, 3 * sizeof(float), reinterpret_cast<void *>(0 * sizeof(float)));
+  glEnableVertexAttribArray(0);
+  glBindVertexArray(0);
 
   unsigned cubeVAO, cubeVBO;
   glGenVertexArrays(1, &cubeVAO);
@@ -185,7 +200,6 @@ int main() {
   while (!glfwWindowShouldClose(window)) {
     glBindFramebuffer(GL_FRAMEBUFFER, FBO);
     glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
@@ -194,15 +208,26 @@ int main() {
     lastFrame = currentFrame;
     processInput(window);
 
+    glm::mat4 projection = glm::perspective(glm::radians(camera.getFov()), static_cast<float>(WIDTH) / static_cast<float>(HEIGHT), 0.1f, 100.0f);
+    glm::mat4 view = camera.getViewMatrix();
+    glm::mat4 model = glm::mat4(1.0f);
+
+    skyboxShader.use();
+    skyboxShader.setMat4("projection", projection);
+    skyboxShader.setMat4("view", glm::mat4(glm::mat3(view)));
+    glDepthMask(false);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, skybox.getTexture());
+    glBindVertexArray(skyboxVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+    glDepthMask(true);
+    glBindVertexArray(0);
+
     baseShader.use();
     flashlight.position = camera.getPosition();
     flashlight.direction = camera.getDirection();
     lighting.changeSpotLight(0, flashlight);
     lighting.uploadToShader(baseShader);
 
-    glm::mat4 projection = glm::perspective(glm::radians(camera.getFov()), static_cast<float>(WIDTH) / static_cast<float>(HEIGHT), 0.1f, 100.0f);
-    glm::mat4 view = camera.getViewMatrix();
-    glm::mat4 model = glm::mat4(1.0f);
     baseShader.setMat4("view", view);
     baseShader.setMat4("projection", projection);
     baseShader.setVec3("viewPosition", camera.getPosition());
@@ -213,6 +238,7 @@ int main() {
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
 
+    glEnable(GL_CULL_FACE);
     glBindTexture(GL_TEXTURE_2D, marbleTexture.getTexture());
     glBindVertexArray(cubeVAO);
     for (const glm::vec3 &cubePosition : cubes) {
@@ -256,9 +282,11 @@ int main() {
   glDeleteVertexArrays(1, &planeVAO);
   glDeleteVertexArrays(1, &singleColorCubeVAO);
   glDeleteVertexArrays(1, &screenVAO);
+  glDeleteVertexArrays(1, &skyboxVAO);
   glDeleteBuffers(1, &cubeVBO);
   glDeleteBuffers(1, &planeVBO);
   glDeleteBuffers(1, &screenVBO);
+  glDeleteBuffers(1, &skyboxVBO);
   glDeleteBuffers(1, &FBO);
   glfwTerminate();
 }
