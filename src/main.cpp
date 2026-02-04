@@ -89,9 +89,6 @@ int main() {
     std::cerr << "Failed to initialize GLEW.\n";
     return -1;
   }
-  glEnable(GL_DEPTH_TEST);
-  glCullFace(GL_BACK);
-  glFrontFace(GL_CW);
 
   Shader baseShader(PROJECT_PATH + "/src/shaders/base.vertex.glsl", PROJECT_PATH + "/src/shaders/base.fragment.glsl");
   Shader singleColorShader(PROJECT_PATH + "/src/shaders/singleColor.vertex.glsl", PROJECT_PATH + "/src/shaders/singleColor.fragment.glsl");
@@ -109,7 +106,7 @@ int main() {
   Types::PointLight lamp = LAMP;
   Types::SpotLight flashlight = FLASHLIGHT;
   std::vector<glm::vec3> lamps{glm::vec3(1.5f, 1.5f, 1.5f)};
-  std::vector<glm::vec3> cubes{glm::vec3(-1.0f, 0.0f, -1.0f), glm::vec3(2.0f, 0.0f, 0.0f)};
+  std::vector<glm::vec3> cubes{glm::vec3(-1.0f, 0.01f, -1.0f), glm::vec3(2.0f, 0.01f, 0.0f)};
 
   for (const glm::vec3 &lampPosition : lamps) {
     lamp.position = lampPosition;
@@ -208,26 +205,14 @@ int main() {
     lastFrame = currentFrame;
     processInput(window);
 
-    glm::mat4 projection = glm::perspective(glm::radians(camera.getFov()), static_cast<float>(WIDTH) / static_cast<float>(HEIGHT), 0.1f, 100.0f);
-    glm::mat4 view = camera.getViewMatrix();
-    glm::mat4 model = glm::mat4(1.0f);
-
-    skyboxShader.use();
-    skyboxShader.setMat4("projection", projection);
-    skyboxShader.setMat4("view", glm::mat4(glm::mat3(view)));
-    glDepthMask(false);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, skybox.getTexture());
-    glBindVertexArray(skyboxVAO);
-    glDrawArrays(GL_TRIANGLES, 0, 36);
-    glDepthMask(true);
-    glBindVertexArray(0);
-
     baseShader.use();
     flashlight.position = camera.getPosition();
     flashlight.direction = camera.getDirection();
     lighting.changeSpotLight(0, flashlight);
     lighting.uploadToShader(baseShader);
-
+    glm::mat4 projection = glm::perspective(glm::radians(camera.getFov()), static_cast<float>(WIDTH) / static_cast<float>(HEIGHT), 0.1f, 100.0f);
+    glm::mat4 view = camera.getViewMatrix();
+    glm::mat4 model = glm::mat4(1.0f);
     baseShader.setMat4("view", view);
     baseShader.setMat4("projection", projection);
     baseShader.setVec3("viewPosition", camera.getPosition());
@@ -238,7 +223,6 @@ int main() {
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
 
-    glEnable(GL_CULL_FACE);
     glBindTexture(GL_TEXTURE_2D, marbleTexture.getTexture());
     glBindVertexArray(cubeVAO);
     for (const glm::vec3 &cubePosition : cubes) {
@@ -263,12 +247,21 @@ int main() {
     }
     glBindVertexArray(0);
 
+    skyboxShader.use();
+    skyboxShader.setMat4("projection", projection);
+    skyboxShader.setMat4("view", glm::mat4(glm::mat3(view)));
+    glDepthFunc(GL_LEQUAL);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, skybox.getTexture());
+    glBindVertexArray(skyboxVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+    glBindVertexArray(0);
+    glDepthFunc(GL_LESS);
+
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_CULL_FACE);
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
     screenShader.use();
+    glDisable(GL_DEPTH_TEST);
     glBindTexture(GL_TEXTURE_2D, screenTexture);
     glBindVertexArray(screenVAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);

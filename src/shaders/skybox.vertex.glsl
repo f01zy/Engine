@@ -8,5 +8,6 @@ uniform mat4 view;
 
 void main() {
   textureCoordinates = position;
-  gl_Position = projection * view * vec4(position, 1.0f);
+  vec4 absolutePosition = projection * view * vec4(position, 1.0f);
+  gl_Position = absolutePosition.xyww;
 }
