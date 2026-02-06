@@ -4,7 +4,7 @@ in vec2 vertexTextureCoordinates;
 out vec4 color;
 uniform sampler2D screenTexture;
 
-const float offset = 1.0 / 800.0;
+const float offset = 1.0 / 1600.0;
 
 void main() {
   vec2 offsets[9] = vec2[](
