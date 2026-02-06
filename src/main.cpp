@@ -14,6 +14,7 @@
 #include "Lighting/presets/GlobalLight.h"
 #include "Lighting/presets/Lamp.h"
 #include "Objects/Objects.h"
+#include "ResourceManager/ResourceManager.h"
 #include "Shader/Shader.h"
 #include "Texture/Texture.h"
 
@@ -34,11 +35,7 @@ std::vector<glm::vec3> cubes{glm::vec3(-1.0f, 0.01f, -1.0f), glm::vec3(2.0f, 0.0
 std::vector<glm::vec3> lamps{glm::vec3(1.5f, 1.5f, 1.5f)};
 glm::vec3 position(0.0f, 0.0f, 3.0f);
 glm::vec3 direction(0.0f, 0.0f, -1.0f);
-
 Camera camera(position, direction);
-Lighting lighting;
-Buffers buffers;
-Objects objects;
 
 std::unordered_map<int, Direction> movements{
     {GLFW_KEY_W, Direction::FORWARD}, {GLFW_KEY_S, Direction::BACK},   {GLFW_KEY_A, Direction::LEFT},
@@ -97,21 +94,19 @@ int main() {
   }
   glCullFace(GL_BACK);
   glFrontFace(GL_CW);
+  ResourceManager resourceManager;
+  Lighting lighting;
+  Buffers buffers;
+  Objects objects;
 
-  Shader baseShader(PROJECT_PATH + "/src/shaders/base.vertex.glsl", PROJECT_PATH + "/src/shaders/base.fragment.glsl");
-  Shader singleColorShader(PROJECT_PATH + "/src/shaders/singleColor.vertex.glsl", PROJECT_PATH + "/src/shaders/singleColor.fragment.glsl");
-  Shader screenShader(PROJECT_PATH + "/src/shaders/screen.vertex.glsl", PROJECT_PATH + "/src/shaders/screen.fragment.glsl");
-  Shader skyboxShader(PROJECT_PATH + "/src/shaders/skybox.vertex.glsl", PROJECT_PATH + "/src/shaders/skybox.fragment.glsl");
-  unsigned baseShaderProgramId = baseShader.getShaderProgram();
-  unsigned singleColorShaderProgramId = singleColorShader.getShaderProgram();
-  unsigned screenShaderProgramId = screenShader.getShaderProgram();
-  unsigned skyboxShaderProgramId = skyboxShader.getShaderProgram();
-  std::unordered_map<unsigned, Shader &> shaders{
-      {baseShaderProgramId, baseShader},
-      {singleColorShaderProgramId, singleColorShader},
-      {screenShaderProgramId, screenShader},
-      {skyboxShaderProgramId, skyboxShader},
-  };
+  unsigned baseShaderId = resourceManager.loadShader(PROJECT_PATH + "/src/shaders/base.vertex.glsl", PROJECT_PATH + "/src/shaders/base.fragment.glsl");
+  unsigned screenShaderId = resourceManager.loadShader(PROJECT_PATH + "/src/shaders/screen.vertex.glsl", PROJECT_PATH + "/src/shaders/screen.fragment.glsl");
+  unsigned skyboxShaderId = resourceManager.loadShader(PROJECT_PATH + "/src/shaders/skybox.vertex.glsl", PROJECT_PATH + "/src/shaders/skybox.fragment.glsl");
+  unsigned singleColorShaderId =
+      resourceManager.loadShader(PROJECT_PATH + "/src/shaders/singleColor.vertex.glsl", PROJECT_PATH + "/src/shaders/singleColor.fragment.glsl");
+
+  Shader &baseShader = resourceManager.getShaderById(baseShaderId);
+  Shader &screenShader = resourceManager.getShaderById(screenShaderId);
 
   std::vector<std::string> faces{
       PROJECT_PATH + "/resources/textures/skybox/right.jpg", PROJECT_PATH + "/resources/textures/skybox/left.jpg",
@@ -135,18 +130,9 @@ int main() {
   plane.verticesCount = 6;
   plane.textureTarget = GL_TEXTURE_2D;
   plane.texture = metalTexture.getTexture();
-  plane.renderFlags = GL_DEPTH | GL_LESS;
+  plane.renderFlags = GL_DEPTH;
   plane.vertexArray = buffers.getPlaneVertexArray();
-  objects.addObject(plane, baseShaderProgramId);
-
-  Object skybox;
-  skybox.position = glm::vec3(0.0f, 0.0f, 0.0f);
-  skybox.verticesCount = 36;
-  skybox.textureTarget = GL_TEXTURE_CUBE_MAP;
-  skybox.texture = skyboxTexture.getTexture();
-  skybox.renderFlags = GL_DEPTH | GL_LEQUAL;
-  skybox.vertexArray = buffers.getSkyboxVertexArray();
-  objects.addObject(skybox, skyboxShaderProgramId);
+  objects.addObject(plane, baseShaderId);
 
   for (const glm::vec3 &cubePosition : cubes) {
     Object cube;
@@ -154,9 +140,9 @@ int main() {
     cube.verticesCount = 36;
     cube.textureTarget = GL_TEXTURE_2D;
     cube.texture = marbleTexture.getTexture();
-    cube.renderFlags = GL_DEPTH | GL_LESS | GL_CULL_FACE;
+    cube.renderFlags = GL_DEPTH | GL_CULL_FACE;
     cube.vertexArray = buffers.getCubeVertexArray();
-    objects.addObject(cube, baseShaderProgramId);
+    objects.addObject(cube, baseShaderId);
   }
 
   for (const glm::vec3 &lampPosition : lamps) {
@@ -165,10 +151,26 @@ int main() {
     lamp.verticesCount = 36;
     lamp.textureTarget = 0;
     lamp.texture = 0;
-    lamp.renderFlags = GL_DEPTH | GL_LESS | GL_CULL_FACE;
+    lamp.renderFlags = GL_DEPTH | GL_CULL_FACE;
     lamp.vertexArray = buffers.getSingleColorCubeVertexArray();
-    objects.addObject(lamp, singleColorShaderProgramId);
+    objects.addObject(lamp, singleColorShaderId);
   }
+
+  Object skybox;
+  skybox.position = glm::vec3(0.0f, 0.0f, 0.0f);
+  skybox.verticesCount = 36;
+  skybox.textureTarget = GL_TEXTURE_CUBE_MAP;
+  skybox.texture = skyboxTexture.getTexture();
+  skybox.renderFlags = GL_DEPTH | GL_LEQUAL;
+  skybox.vertexArray = buffers.getSkyboxVertexArray();
+  objects.addObject(skybox, skyboxShaderId);
+
+  unsigned matricesUBO;
+  glGenBuffers(1, &matricesUBO);
+  glBindBuffer(GL_UNIFORM_BUFFER, matricesUBO);
+  glBufferData(GL_UNIFORM_BUFFER, sizeof(glm::mat4) * 2, nullptr, GL_STATIC_DRAW);
+  glBindBuffer(GL_UNIFORM_BUFFER, 0);
+  glBindBufferBase(GL_UNIFORM_BUFFER, 0, matricesUBO);
 
   unsigned FBO;
   glGenFramebuffers(1, &FBO);
@@ -192,24 +194,26 @@ int main() {
 
   while (!glfwWindowShouldClose(window)) {
     glBindFramebuffer(GL_FRAMEBUFFER, FBO);
-    glEnable(GL_DEPTH_TEST);
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
+    processInput(window);
     float currentFrame = glfwGetTime();
     deltaTime = currentFrame - lastFrame;
     lastFrame = currentFrame;
-    processInput(window);
-
     baseShader.use();
     flashlight.position = camera.getPosition();
     flashlight.direction = camera.getDirection();
     lighting.changeSpotLight(0, flashlight);
     lighting.uploadToShader(baseShader);
 
+    glBindBuffer(GL_UNIFORM_BUFFER, matricesUBO);
     glm::mat4 projection = glm::perspective(glm::radians(camera.getFov()), static_cast<float>(WIDTH) / static_cast<float>(HEIGHT), 0.1f, 100.0f);
     glm::mat4 view = camera.getViewMatrix();
-    glm::mat4 model = glm::mat4(1.0f);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(view));
+    glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(projection));
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    objects.draw(resourceManager);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);

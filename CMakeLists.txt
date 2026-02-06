@@ -10,6 +10,9 @@ set(SOURCE
   ./src/Lighting/Lighting.cpp
   ./src/Mesh/Mesh.cpp
   ./src/Model/Model.cpp
+  ./src/Buffers/Buffers.cpp
+  ./src/Objects/Objects.cpp
+  ./src/ResourceManager/ResourceManager.cpp
 ) 
 add_executable(main ${SOURCE})
 

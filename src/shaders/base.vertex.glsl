@@ -8,9 +8,11 @@ out vec3 vertexPosition;
 out vec3 vertexNormal;
 out vec2 vertexTextureCoordinates;
 
+layout(std140) uniform Matrices {
+  mat4 view;
+  mat4 projection;
+};
 uniform mat4 model;
-uniform mat4 view;
-uniform mat4 projection;
 
 void main()
 {

@@ -10,6 +10,7 @@ Shader::Shader(std::string vertexPath, std::string fragmentPath) : vertexPath(ve
   initializeShader(vertexPath, GL_VERTEX_SHADER);
   initializeShader(fragmentPath, GL_FRAGMENT_SHADER);
   glLinkProgram(shaderProgram);
+  glUniformBlockBinding(shaderProgram, glGetUniformBlockIndex(shaderProgram, "Matrices"), 0);
 };
 
 void Shader::use() { glUseProgram(shaderProgram); };
@@ -46,5 +47,9 @@ unsigned Shader::getShaderProgram() { return shaderProgram; }
 void Shader::setInt(const std::string &name, int x) { glUniform1i(glGetUniformLocation(shaderProgram, name.c_str()), x); }
 void Shader::setFloat(const std::string &name, float x) { glUniform1f(glGetUniformLocation(shaderProgram, name.c_str()), x); }
 void Shader::setVec3(const std::string &name, float x, float y, float z) { glUniform3f(glGetUniformLocation(shaderProgram, name.c_str()), x, y, z); }
-void Shader::setVec3(const std::string &name, glm::vec3 vector) { glUniform3f(glGetUniformLocation(shaderProgram, name.c_str()), vector.x, vector.y, vector.z); }
-void Shader::setMat4(const std::string &name, const glm::mat4 &mat) { glUniformMatrix4fv(glGetUniformLocation(shaderProgram, name.c_str()), 1, false, &mat[0][0]); }
+void Shader::setVec3(const std::string &name, glm::vec3 vector) {
+  glUniform3f(glGetUniformLocation(shaderProgram, name.c_str()), vector.x, vector.y, vector.z);
+}
+void Shader::setMat4(const std::string &name, const glm::mat4 &mat) {
+  glUniformMatrix4fv(glGetUniformLocation(shaderProgram, name.c_str()), 1, false, &mat[0][0]);
+}

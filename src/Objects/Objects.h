@@ -3,16 +3,16 @@
 #include <unordered_map>
 #include <vector>
 
-#include "../Shader/Shader.h"
+#include "../ResourceManager/ResourceManager.h"
 #include "../types/Objects.h"
 
 class Objects final {
 public:
   Objects();
   Objects(Objects &) = delete;
-  void addObject(Object &object, unsigned shaderId);
-  void draw(std::unordered_map<unsigned, Shader &> shaders);
+  void addObject(const Object &object, const unsigned shaderId);
+  void draw(ResourceManager &resourceManager);
 
 private:
-  std::unordered_map<int, std::vector<Object>> objects;
+  std::unordered_map<unsigned, std::vector<Object>> objects;
 };
