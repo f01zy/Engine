@@ -1,3 +1,4 @@
+#include "types/Objects.h"
 #define GLEW_STATIC
 #define STB_IMAGE_IMPLEMENTATION
 
@@ -161,16 +162,9 @@ int main() {
   skybox.verticesCount = 36;
   skybox.textureTarget = GL_TEXTURE_CUBE_MAP;
   skybox.texture = skyboxTexture.getTexture();
-  skybox.renderFlags = GL_DEPTH | GL_LEQUAL;
+  skybox.renderFlags = GL_DEPTH | GL_LEQUAL | SEPARATE_MATRICES | NO_TRANSFORM | RENDER_IN_THE_END;
   skybox.vertexArray = buffers.getSkyboxVertexArray();
   objects.addObject(skybox, skyboxShaderId);
-
-  unsigned matricesUBO;
-  glGenBuffers(1, &matricesUBO);
-  glBindBuffer(GL_UNIFORM_BUFFER, matricesUBO);
-  glBufferData(GL_UNIFORM_BUFFER, sizeof(glm::mat4) * 2, nullptr, GL_STATIC_DRAW);
-  glBindBuffer(GL_UNIFORM_BUFFER, 0);
-  glBindBufferBase(GL_UNIFORM_BUFFER, 0, matricesUBO);
 
   unsigned FBO;
   glGenFramebuffers(1, &FBO);
@@ -207,13 +201,9 @@ int main() {
     lighting.changeSpotLight(0, flashlight);
     lighting.uploadToShader(baseShader);
 
-    glBindBuffer(GL_UNIFORM_BUFFER, matricesUBO);
     glm::mat4 projection = glm::perspective(glm::radians(camera.getFov()), static_cast<float>(WIDTH) / static_cast<float>(HEIGHT), 0.1f, 100.0f);
     glm::mat4 view = camera.getViewMatrix();
-    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(view));
-    glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(projection));
-    glBindBuffer(GL_UNIFORM_BUFFER, 0);
-    objects.draw(resourceManager);
+    objects.render(resourceManager, buffers.getMaticesUniformBuffer(), view, projection);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);

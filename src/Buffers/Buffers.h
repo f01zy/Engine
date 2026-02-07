@@ -11,6 +11,7 @@ public:
   unsigned getSkyboxVertexArray();
   unsigned getScreenVertexArray();
   unsigned getSingleColorCubeVertexArray();
+  unsigned getMaticesUniformBuffer();
 
 private:
   unsigned cubeVAO, cubeVBO;
@@ -18,4 +19,5 @@ private:
   unsigned skyboxVAO, skyboxVBO;
   unsigned screenVAO, screenVBO;
   unsigned singleColorCubeVAO;
+  unsigned matricesUBO;
 };

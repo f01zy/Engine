@@ -1,4 +1,5 @@
 #include <GL/glew.h>
+#include <glm.hpp>
 
 #include "Buffers.h"
 #include "vertices.h"
@@ -56,6 +57,12 @@ Buffers::Buffers() {
   glVertexAttribPointer(1, 2, GL_FLOAT, false, 4 * sizeof(float), reinterpret_cast<void *>(2 * sizeof(float)));
   glEnableVertexAttribArray(1);
   glBindVertexArray(0);
+
+  glGenBuffers(1, &matricesUBO);
+  glBindBuffer(GL_UNIFORM_BUFFER, matricesUBO);
+  glBufferData(GL_UNIFORM_BUFFER, sizeof(glm::mat4) * 2, nullptr, GL_STATIC_DRAW);
+  glBindBuffer(GL_UNIFORM_BUFFER, 0);
+  glBindBufferBase(GL_UNIFORM_BUFFER, 0, matricesUBO);
 }
 
 Buffers::~Buffers() {
@@ -68,6 +75,7 @@ Buffers::~Buffers() {
   glDeleteBuffers(1, &planeVBO);
   glDeleteBuffers(1, &screenVBO);
   glDeleteBuffers(1, &skyboxVBO);
+  glDeleteBuffers(1, &matricesUBO);
 }
 
 unsigned Buffers::getCubeVertexArray() { return cubeVAO; }
@@ -75,3 +83,4 @@ unsigned Buffers::getPlaneVertexArray() { return planeVAO; }
 unsigned Buffers::getSkyboxVertexArray() { return skyboxVAO; }
 unsigned Buffers::getScreenVertexArray() { return screenVAO; }
 unsigned Buffers::getSingleColorCubeVertexArray() { return singleColorCubeVAO; }
+unsigned Buffers::getMaticesUniformBuffer() { return matricesUBO; }
