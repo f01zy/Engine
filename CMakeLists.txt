@@ -13,6 +13,7 @@ set(SOURCE
   ./src/Buffers/Buffers.cpp
   ./src/Objects/Objects.cpp
   ./src/ResourceManager/ResourceManager.cpp
+  ./src/Text/Text.cpp
 ) 
 add_executable(main ${SOURCE})
 
@@ -21,11 +22,13 @@ find_package(OpenGL REQUIRED)
 
 add_subdirectory(./third_party/glfw)
 add_subdirectory(./third_party/assimp)
+add_subdirectory(./third_party/freetype)
 
 target_include_directories(main PRIVATE
   ./third_party/assimp/include
   ./third_party/glm/glm
   ./third_party/stb
+  ./third_party/freetype/include
 )
 
 target_link_libraries(main PRIVATE 
@@ -33,4 +36,5 @@ target_link_libraries(main PRIVATE
   GLEW::GLEW
   glfw
   assimp
+  freetype
 )

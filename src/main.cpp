@@ -16,6 +16,7 @@
 #include "Objects/Objects.h"
 #include "ResourceManager/ResourceManager.h"
 #include "Shader/Shader.h"
+#include "Text/Text.h"
 #include "Texture/Texture.h"
 
 const char *TITLE = "Engine";
@@ -99,6 +100,7 @@ int main() {
   Buffers buffers;
   Objects objects;
 
+  unsigned textShaderId = resourceManager.loadShader(PROJECT_PATH + "/src/shaders/text.vertex.glsl", PROJECT_PATH + "/src/shaders/text.fragment.glsl");
   unsigned baseShaderId = resourceManager.loadShader(PROJECT_PATH + "/src/shaders/base.vertex.glsl", PROJECT_PATH + "/src/shaders/base.fragment.glsl");
   unsigned screenShaderId = resourceManager.loadShader(PROJECT_PATH + "/src/shaders/screen.vertex.glsl", PROJECT_PATH + "/src/shaders/screen.fragment.glsl");
   unsigned skyboxShaderId = resourceManager.loadShader(PROJECT_PATH + "/src/shaders/skybox.vertex.glsl", PROJECT_PATH + "/src/shaders/skybox.fragment.glsl");
@@ -107,6 +109,7 @@ int main() {
 
   Shader &baseShader = resourceManager.getShaderById(baseShaderId);
   Shader &screenShader = resourceManager.getShaderById(screenShaderId);
+  Shader &textShader = resourceManager.getShaderById(textShaderId);
 
   std::vector<std::string> faces{
       PROJECT_PATH + "/resources/textures/skybox/right.jpg", PROJECT_PATH + "/resources/textures/skybox/left.jpg",
@@ -116,6 +119,7 @@ int main() {
   Texture skyboxTexture(faces);
   Texture metalTexture(PROJECT_PATH + "/resources/textures/metal.jpg");
   Texture marbleTexture(PROJECT_PATH + "/resources/textures/marble.jpg");
+  Text text(PROJECT_PATH + "/resources/fonts/JetBrainsMono/ttf/JetBrainsMono-Bold.ttf");
 
   for (const glm::vec3 &lampPosition : lamps) {
     lamp.position = lampPosition;
@@ -124,15 +128,6 @@ int main() {
   lighting.addDirectionalLight(globalLight);
   lighting.addSpotLight(flashlight);
   lighting.uploadToShader(baseShader);
-
-  Object plane;
-  plane.position = glm::vec3(0.0f, 0.0f, 0.0f);
-  plane.verticesCount = 6;
-  plane.textureTarget = GL_TEXTURE_2D;
-  plane.texture = metalTexture.getTexture();
-  plane.renderFlags = DEPTH_TEST;
-  plane.vertexArray = buffers.getPlaneVertexArray();
-  objects.addObject(plane, baseShaderId);
 
   for (const glm::vec3 &cubePosition : cubes) {
     Object cube;
@@ -154,6 +149,15 @@ int main() {
     lamp.vertexArray = buffers.getSingleColorCubeVertexArray();
     objects.addObject(lamp, singleColorShaderId);
   }
+
+  Object plane;
+  plane.position = glm::vec3(0.0f, 0.0f, 0.0f);
+  plane.verticesCount = 6;
+  plane.textureTarget = GL_TEXTURE_2D;
+  plane.texture = metalTexture.getTexture();
+  plane.renderFlags = DEPTH_TEST;
+  plane.vertexArray = buffers.getPlaneVertexArray();
+  objects.addObject(plane, baseShaderId);
 
   Object skybox;
   skybox.position = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -193,9 +197,12 @@ int main() {
     float currentFrame = glfwGetTime();
     deltaTime = currentFrame - lastFrame;
     lastFrame = currentFrame;
+
     baseShader.use();
-    flashlight.position = camera.getPosition();
-    flashlight.direction = camera.getDirection();
+    glm::vec3 position = camera.getPosition();
+    glm::vec3 direction = camera.getDirection();
+    flashlight.position = position;
+    flashlight.direction = direction;
     lighting.changeSpotLight(0, flashlight);
     lighting.uploadToShader(baseShader);
 
@@ -203,12 +210,18 @@ int main() {
     glm::mat4 view = camera.getViewMatrix();
     objects.render(resourceManager, buffers.getMaticesUniformBuffer(), view, projection);
 
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+    glm::mat4 textProjection = glm::ortho(0.0f, static_cast<float>(WIDTH), 0.0f, static_cast<float>(HEIGHT));
+    std::string positionText = std::to_string(position.x) + ", " + std::to_string(position.y) + ", " + std::to_string(position.z);
+    std::string framesPerSecondText = "FPS: " + std::to_string(static_cast<int>(1 / deltaTime));
+    text.render(textShader, positionText, 15.0f, HEIGHT - 25.0f, 0.3f, glm::vec3(1.0f, 1.0f, 1.0f), textProjection);
+    text.render(textShader, framesPerSecondText, 15.0f, HEIGHT - 50.0f, 0.3f, glm::vec3(1.0f, 1.0f, 1.0f), textProjection);
+
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
     screenShader.use();
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_CULL_FACE);
     glBindTexture(GL_TEXTURE_2D, screenTexture);
     glBindVertexArray(buffers.getScreenVertexArray());
     glDrawArrays(GL_TRIANGLES, 0, 6);

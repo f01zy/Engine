@@ -9,6 +9,7 @@ public:
   Texture(std::string path);
   Texture(std::vector<std::string> faces);
   Texture(Texture &) = delete;
+  ~Texture();
   unsigned getTexture();
 
 private:
