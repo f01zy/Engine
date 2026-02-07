@@ -131,7 +131,7 @@ int main() {
   plane.verticesCount = 6;
   plane.textureTarget = GL_TEXTURE_2D;
   plane.texture = metalTexture.getTexture();
-  plane.renderFlags = GL_DEPTH;
+  plane.renderFlags = DEPTH_TEST;
   plane.vertexArray = buffers.getPlaneVertexArray();
   objects.addObject(plane, baseShaderId);
 
@@ -141,7 +141,7 @@ int main() {
     cube.verticesCount = 36;
     cube.textureTarget = GL_TEXTURE_2D;
     cube.texture = marbleTexture.getTexture();
-    cube.renderFlags = GL_DEPTH | GL_CULL_FACE;
+    cube.renderFlags = DEPTH_TEST | CULL_FACE;
     cube.vertexArray = buffers.getCubeVertexArray();
     objects.addObject(cube, baseShaderId);
   }
@@ -149,10 +149,9 @@ int main() {
   for (const glm::vec3 &lampPosition : lamps) {
     Object lamp;
     lamp.position = lampPosition;
+    lamp.scale = glm::vec3(0.2f);
     lamp.verticesCount = 36;
-    lamp.textureTarget = 0;
-    lamp.texture = 0;
-    lamp.renderFlags = GL_DEPTH | GL_CULL_FACE;
+    lamp.renderFlags = DEPTH_TEST | CULL_FACE | SCALE;
     lamp.vertexArray = buffers.getSingleColorCubeVertexArray();
     objects.addObject(lamp, singleColorShaderId);
   }
@@ -162,7 +161,7 @@ int main() {
   skybox.verticesCount = 36;
   skybox.textureTarget = GL_TEXTURE_CUBE_MAP;
   skybox.texture = skyboxTexture.getTexture();
-  skybox.renderFlags = GL_DEPTH | GL_LEQUAL | SEPARATE_MATRICES | NO_TRANSFORM | RENDER_IN_THE_END;
+  skybox.renderFlags = DEPTH_TEST | DEPTH_LEQUAL | SEPARATE_MATRICES | NO_TRANSFORM | RENDER_IN_THE_END;
   skybox.vertexArray = buffers.getSkyboxVertexArray();
   objects.addObject(skybox, skyboxShaderId);
 

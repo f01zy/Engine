@@ -24,7 +24,14 @@ void Objects::render(ResourceManager &resourceManager, unsigned matricesUBO, glm
       }
       model = glm::mat4(1.0f);
       model = glm::translate(model, object.position);
+      if (object.renderFlags & SCALE) {
+        model = glm::scale(model, object.scale);
+      }
+      if (object.renderFlags & ROTATE) {
+        model = glm::rotate(model, object.angle, object.rotate);
+      }
       shader.setMat4("model", model);
+      shader.setVec3("objectColor", object.objectColor);
       if (object.textureTarget != 0 && object.texture != 0) {
         glBindTexture(object.textureTarget, object.texture);
       }
