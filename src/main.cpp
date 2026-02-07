@@ -1,4 +1,3 @@
-#include "types/Objects.h"
 #define GLEW_STATIC
 #define STB_IMAGE_IMPLEMENTATION
 
@@ -209,6 +208,7 @@ int main() {
     glClear(GL_COLOR_BUFFER_BIT);
     screenShader.use();
     glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
     glBindTexture(GL_TEXTURE_2D, screenTexture);
     glBindVertexArray(buffers.getScreenVertexArray());
     glDrawArrays(GL_TRIANGLES, 0, 6);
