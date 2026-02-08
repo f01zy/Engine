@@ -76,9 +76,5 @@ Texture::Texture(std::vector<std::string> faces) {
   glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 }
 
-Texture::~Texture() {
-  std::cout << "Deleting texture: " << texture << "\n";
-  glDeleteTextures(1, &texture);
-}
-
+Texture::~Texture() { glDeleteTextures(1, &texture); }
 unsigned Texture::getTexture() { return texture; }

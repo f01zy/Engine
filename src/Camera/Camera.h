@@ -10,9 +10,9 @@ const float YAW = -90.0f;
 const float PITCH = 0.0f;
 const float FOV = 45.0f;
 const float SENSITIVITY = 0.05f;
-const float ACCELERATION = 1.0f;
-const float STOPPING_ACCELERATION = 2.0f;
-const float MAX_SPEED = 0.2f;
+const float ACCELERATION = 30.0f;
+const float STOPPING_ACCELERATION = 45.0f;
+const float MAX_SPEED = 14.0f;
 
 enum Direction { FORWARD, BACK, LEFT, RIGHT, UP, DOWN };
 
@@ -25,6 +25,7 @@ public:
   glm::vec3 getPosition();
   glm::mat4 getViewMatrix();
   float getFov();
+  float getVelocity();
 
   void processMovement();
   void processKeyboard(GLFWwindow *window, float deltaTime, std::vector<Direction> movementDirections);

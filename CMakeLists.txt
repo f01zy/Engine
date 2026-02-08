@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.5) 
 project("OpenGL 3D Engine" VERSION 0.0.1) 
 
+set (CMAKE_CXX_STANDARD 17)
 set(SOURCE 
   ./src/main.cpp 
   ./src/Service/Service.cpp 
@@ -14,7 +15,7 @@ set(SOURCE
   ./src/Objects/Objects.cpp
   ./src/ResourceManager/ResourceManager.cpp
   ./src/Text/Text.cpp
-) 
+)
 add_executable(main ${SOURCE})
 
 find_package(GLEW REQUIRED)

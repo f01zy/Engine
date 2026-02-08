@@ -243,12 +243,10 @@ int main() {
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
-    glm::mat4 textProjection = glm::ortho(0.0f, static_cast<float>(WIDTH), 0.0f, static_cast<float>(HEIGHT));
 
-    std::string positionText = std::to_string(position.x) + ", " + std::to_string(position.y) + ", " + std::to_string(position.z);
-    text.render(textShader, positionText, 15.0f, HEIGHT - 25.0f, 0.3f, glm::vec3(1.0f, 1.0f, 1.0f), textProjection);
-    std::string framesPerSecondText = "FPS: " + std::to_string(static_cast<int>(1 / deltaTime));
-    text.render(textShader, framesPerSecondText, 15.0f, HEIGHT - 50.0f, 0.3f, glm::vec3(1.0f, 1.0f, 1.0f), textProjection);
+    glm::mat4 textProjection = glm::ortho(0.0f, static_cast<float>(WIDTH), 0.0f, static_cast<float>(HEIGHT));
+    text.render(textShader, "FPS: ", 15.0f, HEIGHT - 25.0f, 0.3f, glm::vec3(1.0f), textProjection);
+    text.render(textShader, std::to_string(static_cast<int>(1 / deltaTime)), 55.0f, HEIGHT - 25.0f, 0.3f, glm::vec3(1.0f), textProjection);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);

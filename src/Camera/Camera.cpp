@@ -4,6 +4,7 @@
 
 Camera::Camera(glm::vec3 &position, glm::vec3 &direction) : position(position), direction(direction) {
   worldUp = glm::vec3(0.0f, 1.0f, 0.0f);
+  velocity = glm::vec3(0.0f);
   updateDirection();
 }
 
@@ -30,13 +31,13 @@ void Camera::processKeyboard(GLFWwindow *window, float deltaTime, std::vector<Di
       float newSpeed = std::max(0.0f, currentSpeed - stoppingAcceleration * deltaTime);
       velocity = glm::normalize(velocity) * newSpeed;
     }
-    return;
+  } else {
+    velocity += glm::normalize(movementDirectionVector) * acceleration * deltaTime;
   }
-  velocity += glm::normalize(movementDirectionVector) * acceleration * deltaTime;
   if (glm::length(velocity) > maxSpeed) {
     velocity = glm::normalize(velocity) * maxSpeed;
   }
-  position += velocity;
+  position += velocity * deltaTime;
 }
 
 void Camera::processMouseMovement(float xoffset, float yoffset) {
@@ -66,6 +67,7 @@ void Camera::updateDirection() {
 }
 
 float Camera::getFov() { return fov; }
+float Camera::getVelocity() { return glm::length(velocity); }
 glm::vec3 Camera::getDirection() { return direction; }
 glm::vec3 Camera::getPosition() { return position; }
 glm::mat4 Camera::getViewMatrix() { return glm::lookAt(position, position + direction, up); }
