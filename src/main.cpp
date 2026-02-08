@@ -15,13 +15,12 @@
 #include "Lighting/presets/Lamp.h"
 #include "Objects/Objects.h"
 #include "ResourceManager/ResourceManager.h"
-#include "Shader/Shader.h"
 #include "Text/Text.h"
-#include "Texture/Texture.h"
 
-const char *TITLE = "Engine";
 const int WIDTH = 900, HEIGHT = 600;
-std::string PROJECT_PATH = "/home/aminov/Documents/Programming/OpenGL/Engine";
+const char *TITLE = "Engine";
+std::string SHADERS_PATH = "/home/aminov/Documents/Programming/OpenGL/Engine/src/shaders";
+std::string RESOURCES_PATH = "/home/aminov/Documents/Programming/OpenGL/Engine/resources";
 
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
@@ -88,38 +87,40 @@ int main() {
   glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
   glfwSetCursorPosCallback(window, mouseCallback);
   glfwSetScrollCallback(window, scrollCallback);
+
   glewExperimental = true;
   if (glewInit()) {
     std::cerr << "Failed to initialize GLEW.\n";
     return -1;
   }
+
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glCullFace(GL_BACK);
   glFrontFace(GL_CW);
+
   ResourceManager resourceManager;
   Lighting lighting;
   Buffers buffers;
   Objects objects;
 
-  unsigned textShaderId = resourceManager.loadShader(PROJECT_PATH + "/src/shaders/text.vertex.glsl", PROJECT_PATH + "/src/shaders/text.fragment.glsl");
-  unsigned baseShaderId = resourceManager.loadShader(PROJECT_PATH + "/src/shaders/base.vertex.glsl", PROJECT_PATH + "/src/shaders/base.fragment.glsl");
-  unsigned screenShaderId = resourceManager.loadShader(PROJECT_PATH + "/src/shaders/screen.vertex.glsl", PROJECT_PATH + "/src/shaders/screen.fragment.glsl");
-  unsigned skyboxShaderId = resourceManager.loadShader(PROJECT_PATH + "/src/shaders/skybox.vertex.glsl", PROJECT_PATH + "/src/shaders/skybox.fragment.glsl");
-  unsigned singleColorShaderId =
-      resourceManager.loadShader(PROJECT_PATH + "/src/shaders/singleColor.vertex.glsl", PROJECT_PATH + "/src/shaders/singleColor.fragment.glsl");
+  unsigned textShaderId = resourceManager.loadShader(SHADERS_PATH + "/text.vertex.glsl", SHADERS_PATH + "/text.fragment.glsl");
+  unsigned baseShaderId = resourceManager.loadShader(SHADERS_PATH + "/base.vertex.glsl", SHADERS_PATH + "/base.fragment.glsl");
+  unsigned screenShaderId = resourceManager.loadShader(SHADERS_PATH + "/screen.vertex.glsl", SHADERS_PATH + "/screen.fragment.glsl");
+  unsigned skyboxShaderId = resourceManager.loadShader(SHADERS_PATH + "/skybox.vertex.glsl", SHADERS_PATH + "/skybox.fragment.glsl");
+  unsigned singleColorShaderId = resourceManager.loadShader(SHADERS_PATH + "/singleColor.vertex.glsl", SHADERS_PATH + "/singleColor.fragment.glsl");
 
   Shader &baseShader = resourceManager.getShaderById(baseShaderId);
   Shader &screenShader = resourceManager.getShaderById(screenShaderId);
   Shader &textShader = resourceManager.getShaderById(textShaderId);
 
   std::vector<std::string> faces{
-      PROJECT_PATH + "/resources/textures/skybox/right.jpg", PROJECT_PATH + "/resources/textures/skybox/left.jpg",
-      PROJECT_PATH + "/resources/textures/skybox/top.jpg",   PROJECT_PATH + "/resources/textures/skybox/bottom.jpg",
-      PROJECT_PATH + "/resources/textures/skybox/front.jpg", PROJECT_PATH + "/resources/textures/skybox/back.jpg",
+      RESOURCES_PATH + "/textures/skybox/right.jpg",  RESOURCES_PATH + "/textures/skybox/left.jpg",  RESOURCES_PATH + "/textures/skybox/top.jpg",
+      RESOURCES_PATH + "/textures/skybox/bottom.jpg", RESOURCES_PATH + "/textures/skybox/front.jpg", RESOURCES_PATH + "/textures/skybox/back.jpg",
   };
-  Texture skyboxTexture(faces);
-  Texture metalTexture(PROJECT_PATH + "/resources/textures/metal.jpg");
-  Texture marbleTexture(PROJECT_PATH + "/resources/textures/marble.jpg");
-  Text text(PROJECT_PATH + "/resources/fonts/JetBrainsMono/ttf/JetBrainsMono-Bold.ttf");
+  unsigned skyboxTexture = resourceManager.loadTexture(faces);
+  unsigned metalTexture = resourceManager.loadTexture(RESOURCES_PATH + "/textures/metal.jpg");
+  unsigned marbleTexture = resourceManager.loadTexture(RESOURCES_PATH + "/textures/marble.jpg");
+  Text text(RESOURCES_PATH + "/fonts/JetBrainsMono/ttf/JetBrainsMono-Bold.ttf");
 
   for (const glm::vec3 &lampPosition : lamps) {
     lamp.position = lampPosition;
@@ -130,42 +131,63 @@ int main() {
   lighting.uploadToShader(baseShader);
 
   for (const glm::vec3 &cubePosition : cubes) {
-    Object cube;
-    cube.position = cubePosition;
-    cube.verticesCount = 36;
-    cube.textureTarget = GL_TEXTURE_2D;
-    cube.texture = marbleTexture.getTexture();
-    cube.renderFlags = DEPTH_TEST | CULL_FACE;
-    cube.vertexArray = buffers.getCubeVertexArray();
+    Types::Object cube{
+        cubePosition,
+        glm::vec3(1.0f, 1.0f, 1.0f),
+        glm::vec3(1.0f, 1.0f, 1.0f),
+        glm::vec3(1.0f, 1.0f, 1.0f),
+        0.0f,
+        GL_TEXTURE_2D,
+        marbleTexture,
+        buffers.getCubeVertexArray(),
+        36,
+        DEPTH_TEST | CULL_FACE,
+    };
     objects.addObject(cube, baseShaderId);
   }
 
   for (const glm::vec3 &lampPosition : lamps) {
-    Object lamp;
-    lamp.position = lampPosition;
-    lamp.scale = glm::vec3(0.2f);
-    lamp.verticesCount = 36;
-    lamp.renderFlags = DEPTH_TEST | CULL_FACE | SCALE;
-    lamp.vertexArray = buffers.getSingleColorCubeVertexArray();
+    Types::Object lamp{
+        lampPosition,
+        glm::vec3(0.2f),
+        glm::vec3(1.0f),
+        glm::vec3(1.0f),
+        0.0f,
+        0,
+        0,
+        buffers.getSingleColorCubeVertexArray(),
+        36,
+        DEPTH_TEST | CULL_FACE | SCALE,
+    };
     objects.addObject(lamp, singleColorShaderId);
   }
 
-  Object plane;
-  plane.position = glm::vec3(0.0f, 0.0f, 0.0f);
-  plane.verticesCount = 6;
-  plane.textureTarget = GL_TEXTURE_2D;
-  plane.texture = metalTexture.getTexture();
-  plane.renderFlags = DEPTH_TEST;
-  plane.vertexArray = buffers.getPlaneVertexArray();
+  Types::Object plane{
+      glm::vec3(0.0f, 0.0f, 0.0f),
+      glm::vec3(1.0f, 1.0f, 1.0f),
+      glm::vec3(1.0f, 1.0f, 1.0f),
+      glm::vec3(1.0f, 1.0f, 1.0f),
+      0.0f,
+      GL_TEXTURE_2D,
+      metalTexture,
+      buffers.getPlaneVertexArray(),
+      6,
+      DEPTH_TEST,
+  };
   objects.addObject(plane, baseShaderId);
 
-  Object skybox;
-  skybox.position = glm::vec3(0.0f, 0.0f, 0.0f);
-  skybox.verticesCount = 36;
-  skybox.textureTarget = GL_TEXTURE_CUBE_MAP;
-  skybox.texture = skyboxTexture.getTexture();
-  skybox.renderFlags = DEPTH_TEST | DEPTH_LEQUAL | SEPARATE_MATRICES | NO_TRANSFORM | RENDER_IN_THE_END;
-  skybox.vertexArray = buffers.getSkyboxVertexArray();
+  Types::Object skybox{
+      glm::vec3(0.0f),
+      glm::vec3(1.0f),
+      glm::vec3(1.0f),
+      glm::vec3(1.0f),
+      0.0f,
+      GL_TEXTURE_CUBE_MAP,
+      skyboxTexture,
+      buffers.getSkyboxVertexArray(),
+      36,
+      DEPTH_TEST | DEPTH_LEQUAL | SEPARATE_MATRICES | NO_TRANSFORM,
+  };
   objects.addObject(skybox, skyboxShaderId);
 
   unsigned FBO;
@@ -213,9 +235,10 @@ int main() {
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
     glm::mat4 textProjection = glm::ortho(0.0f, static_cast<float>(WIDTH), 0.0f, static_cast<float>(HEIGHT));
+
     std::string positionText = std::to_string(position.x) + ", " + std::to_string(position.y) + ", " + std::to_string(position.z);
-    std::string framesPerSecondText = "FPS: " + std::to_string(static_cast<int>(1 / deltaTime));
     text.render(textShader, positionText, 15.0f, HEIGHT - 25.0f, 0.3f, glm::vec3(1.0f, 1.0f, 1.0f), textProjection);
+    std::string framesPerSecondText = "FPS: " + std::to_string(static_cast<int>(1 / deltaTime));
     text.render(textShader, framesPerSecondText, 15.0f, HEIGHT - 50.0f, 0.3f, glm::vec3(1.0f, 1.0f, 1.0f), textProjection);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);

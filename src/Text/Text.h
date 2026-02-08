@@ -13,6 +13,6 @@ public:
   void render(Shader &shader, std::string text, float x, float y, float scale, glm::vec3 color, glm::mat4 &projection);
 
 private:
-  std::unordered_map<char, Character> characters;
+  std::unordered_map<char, Types::Character> characters;
   unsigned textVAO, textVBO;
 };

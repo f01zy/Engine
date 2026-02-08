@@ -10,11 +10,11 @@ Text::Text(std::string font) {
   std::cout << "Loading font: " << font << "\n";
   FT_Library ft;
   if (FT_Init_FreeType(&ft)) {
-    std::cout << "Failed to FontType initialize.\n";
+    std::cerr << "Failed to FontType initialize: " << font << "\n";
   }
   FT_Face face;
   if (FT_New_Face(ft, font.c_str(), 0, &face)) {
-    std::cout << "Failed to load font.\n";
+    std::cerr << "Failed to load font: " << font << "\n";
   }
 
   FT_Set_Pixel_Sizes(face, 0, 48);
@@ -27,20 +27,21 @@ Text::Text(std::string font) {
     unsigned texture;
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, face->glyph->bitmap.width, face->glyph->bitmap.rows, 0, GL_RED, GL_UNSIGNED_BYTE, face->glyph->bitmap.buffer);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, face->glyph->bitmap.width, face->glyph->bitmap.rows, 0, GL_RED, GL_UNSIGNED_BYTE,
+                 face->glyph->bitmap.buffer);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    Character character{
+    Types::Character character{
         texture,
         glm::ivec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
         glm::ivec2(face->glyph->bitmap_left, face->glyph->bitmap_top),
         static_cast<unsigned>(face->glyph->advance.x),
     };
-    characters.insert(std::pair<char, Character>(c, character));
+    characters.insert(std::pair<char, Types::Character>(c, character));
   }
   FT_Done_Face(face);
   FT_Done_FreeType(ft);
@@ -63,11 +64,10 @@ void Text::render(Shader &shader, std::string text, float x, float y, float scal
   glActiveTexture(GL_TEXTURE0);
   glBindVertexArray(textVAO);
   glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
   std::string::const_iterator c;
   for (c = text.begin(); c != text.end(); c++) {
-    Character ch = characters[*c];
+    Types::Character ch = characters[*c];
     float xpos = x + ch.bearing.x * scale;
     float ypos = y - (ch.size.y - ch.bearing.y) * scale;
     float w = ch.size.x * scale;

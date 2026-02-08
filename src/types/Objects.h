@@ -2,6 +2,7 @@
 
 #include <glm.hpp>
 
+namespace Types {
 struct Object {
   glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f);
   glm::vec3 scale = glm::vec3(1.0f, 1.0f, 1.0f);
@@ -14,6 +15,7 @@ struct Object {
   int verticesCount;
   int renderFlags;
 };
+} // namespace Types
 
 const int DEPTH_TEST = 1 << 0;
 const int DEPTH_LEQUAL = 1 << 1;

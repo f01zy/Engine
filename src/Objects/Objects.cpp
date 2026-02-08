@@ -6,7 +6,7 @@
 #include "Objects.h"
 
 Objects::Objects() {}
-void Objects::addObject(const Object &object, const unsigned shaderId) { objects[shaderId].push_back(object); }
+void Objects::addObject(const Types::Object &object, const unsigned shaderId) { objects[shaderId].push_back(object); }
 
 void Objects::render(ResourceManager &resourceManager, unsigned matricesUBO, glm::mat4 &view, glm::mat4 &projection) {
   glBindBuffer(GL_UNIFORM_BUFFER, matricesUBO);
@@ -22,7 +22,7 @@ void Objects::render(ResourceManager &resourceManager, unsigned matricesUBO, glm
     Shader &shader = resourceManager.getShaderById(iter->first);
     shader.use();
 
-    for (const Object &object : iter->second) {
+    for (const Types::Object &object : iter->second) {
       model = glm::mat4(1.0f);
       model = glm::translate(model, object.position);
       if (object.renderFlags & SCALE) {
