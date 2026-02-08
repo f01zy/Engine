@@ -27,6 +27,7 @@ float lastFrame = 0.0f;
 float lastX = WIDTH / 2.0f;
 float lastY = HEIGHT / 2.0f;
 bool firstMouse = true;
+bool isWireframeMode = false;
 
 Types::DirectionalLight globalLight = GLOBAL_LIGHT;
 Types::PointLight lamp = LAMP;
@@ -45,6 +46,12 @@ std::unordered_map<int, Direction> movements{
 void processInput(GLFWwindow *window) {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, true);
+  }
+  if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS) {
+    isWireframeMode = false;
+  }
+  if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS) {
+    isWireframeMode = true;
   }
   std::vector<Direction> directions;
   for (const auto &i : movements) {
@@ -228,10 +235,12 @@ int main() {
     lighting.changeSpotLight(0, flashlight);
     lighting.uploadToShader(baseShader);
 
+    glPolygonMode(GL_FRONT_AND_BACK, isWireframeMode ? GL_LINE : GL_FILL);
     glm::mat4 projection = glm::perspective(glm::radians(camera.getFov()), static_cast<float>(WIDTH) / static_cast<float>(HEIGHT), 0.1f, 100.0f);
     glm::mat4 view = camera.getViewMatrix();
     objects.render(resourceManager, buffers.getMaticesUniformBuffer(), view, projection);
 
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
     glm::mat4 textProjection = glm::ortho(0.0f, static_cast<float>(WIDTH), 0.0f, static_cast<float>(HEIGHT));
