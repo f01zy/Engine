@@ -26,8 +26,12 @@ float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 float lastX = WIDTH / 2.0f;
 float lastY = HEIGHT / 2.0f;
+
 bool firstMouse = true;
 bool isWireframeMode = false;
+bool isWireframeModeKeyPressed = false;
+bool isDebugMode = false;
+bool isDebugModeKeyPressed = false;
 
 Types::DirectionalLight globalLight = GLOBAL_LIGHT;
 Types::PointLight lamp = LAMP;
@@ -47,12 +51,21 @@ void processInput(GLFWwindow *window) {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, true);
   }
-  if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS) {
-    isWireframeMode = false;
+
+  if (glfwGetKey(window, GLFW_KEY_F1) == GLFW_PRESS && !isWireframeModeKeyPressed) {
+    isWireframeMode = !isWireframeMode;
+    isWireframeModeKeyPressed = true;
+  } else if (glfwGetKey(window, GLFW_KEY_F1) == GLFW_RELEASE) {
+    isWireframeModeKeyPressed = false;
   }
-  if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS) {
-    isWireframeMode = true;
+
+  if (glfwGetKey(window, GLFW_KEY_F2) == GLFW_PRESS && !isDebugModeKeyPressed) {
+    isDebugMode = !isDebugMode;
+    isDebugModeKeyPressed = true;
+  } else if (glfwGetKey(window, GLFW_KEY_F2) == GLFW_RELEASE) {
+    isDebugModeKeyPressed = false;
   }
+
   std::vector<Direction> directions;
   for (const auto &i : movements) {
     if (glfwGetKey(window, i.first) == GLFW_PRESS) {
@@ -244,9 +257,15 @@ int main() {
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
 
-    glm::mat4 textProjection = glm::ortho(0.0f, static_cast<float>(WIDTH), 0.0f, static_cast<float>(HEIGHT));
-    text.render(textShader, "FPS: ", 15.0f, HEIGHT - 25.0f, 0.3f, glm::vec3(1.0f), textProjection);
-    text.render(textShader, std::to_string(static_cast<int>(1 / deltaTime)), 55.0f, HEIGHT - 25.0f, 0.3f, glm::vec3(1.0f), textProjection);
+    if (isDebugMode) {
+      glm::mat4 textProjection = glm::ortho(0.0f, static_cast<float>(WIDTH), 0.0f, static_cast<float>(HEIGHT));
+      text.render(textShader, "FPS: ", 15.0f, HEIGHT - 25.0f, 0.3f, glm::vec3(1.0f), textProjection);
+      text.render(textShader, std::to_string(static_cast<int>(1 / deltaTime)), 55.0f, HEIGHT - 25.0f, 0.3f, glm::vec3(1.0f), textProjection);
+      text.render(textShader, "Position: ", 15.0f, HEIGHT - 50.0f, 0.3f, glm::vec3(1.0f), textProjection);
+      text.render(textShader, std::to_string(position.x), 100.0f, HEIGHT - 50.0f, 0.3f, glm::vec3(1.0f), textProjection);
+      text.render(textShader, std::to_string(position.y), 192.0f, HEIGHT - 50.0f, 0.3f, glm::vec3(1.0f), textProjection);
+      text.render(textShader, std::to_string(position.z), 278.0f, HEIGHT - 50.0f, 0.3f, glm::vec3(1.0f), textProjection);
+    }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
