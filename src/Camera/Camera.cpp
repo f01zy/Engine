@@ -25,6 +25,7 @@ void Camera::processKeyboard(GLFWwindow *window, float deltaTime, std::vector<Di
       movementDirectionVector -= worldUp;
     }
   }
+
   if (glm::length(movementDirectionVector) == 0) {
     float currentSpeed = glm::length(velocity);
     if (currentSpeed != 0) {
@@ -34,6 +35,7 @@ void Camera::processKeyboard(GLFWwindow *window, float deltaTime, std::vector<Di
   } else {
     velocity += glm::normalize(movementDirectionVector) * acceleration * deltaTime;
   }
+
   if (glm::length(velocity) > maxSpeed) {
     velocity = glm::normalize(velocity) * maxSpeed;
   }

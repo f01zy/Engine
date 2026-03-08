@@ -48,9 +48,7 @@ void Lighting::addSpotLight(const Types::SpotLight &light) {
 }
 
 void Lighting::changePointLight(unsigned id, const Types::PointLight &light) { pointLights[id] = light; }
-
 void Lighting::changeSpotLight(unsigned id, const Types::SpotLight &light) { spotLights[id] = light; }
-
 const std::vector<Types::PointLight> &Lighting::getPointLights() { return pointLights; }
 
 void Lighting::uploadDirectionalLight(Shader &shader) {

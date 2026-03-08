@@ -19,8 +19,8 @@
 
 const int WIDTH = 900, HEIGHT = 600;
 const char *TITLE = "Engine";
-std::string SHADERS_PATH = "/home/aminov/Documents/Programming/OpenGL/Engine/src/shaders";
-std::string RESOURCES_PATH = "/home/aminov/Documents/Programming/OpenGL/Engine/resources";
+std::string SHADERS_PATH = "/home/aminov/Documents/Programming/Engine/src/shaders";
+std::string RESOURCES_PATH = "/home/aminov/Documents/Programming/Engine/resources";
 
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
